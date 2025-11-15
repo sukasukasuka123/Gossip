@@ -3,48 +3,7 @@ package Storage
 import (
 	"log"
 	"sync"
-	"sync/atomic"
 )
-
-// 消息状态映射
-type StateMap map[string]bool
-
-// atomicState 使用 atomic.Pointer 保证 CAS 安全
-type atomicState struct {
-	ptr atomic.Pointer[StateMap]
-}
-
-func (a *atomicState) Load() StateMap {
-	p := a.ptr.Load()
-	if p == nil {
-		return nil
-	}
-	cp := make(StateMap, len(*p))
-	for k, v := range *p {
-		cp[k] = v
-	}
-	return cp
-}
-
-func (a *atomicState) CompareAndSwap(old, new StateMap) bool {
-	return a.ptr.CompareAndSwap(&old, &new)
-}
-
-func (a *atomicState) Store(m StateMap) {
-	a.ptr.Store(&m)
-}
-
-// Storage 接口
-type Storage interface {
-	Has(hash string) bool
-	Mark(hash string)
-	InitState(hash string, neighbors []string) error
-	UpdateState(hash string, from string) error
-	GetStates(hash string) (map[string]bool, error)
-	GetState(hash, nodeHash string) bool
-	MarkSent(hash, nodeHash string)
-	DeleteState(hash string)
-}
 
 // LocalStorage 实现
 type LocalStorage struct {
@@ -158,6 +117,5 @@ func (s *LocalStorage) MarkSent(hash, nodeHash string) {
 }
 
 func (s *LocalStorage) DeleteState(hash string) {
-	s.states.Delete(hash)
 	s.seen.Delete(hash)
 }
