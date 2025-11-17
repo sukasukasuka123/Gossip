@@ -3,44 +3,56 @@ package Storage
 import (
 	"log"
 	"sync"
+	// 假设 atomicState 和 StateMap 的定义在此
 )
 
-// LocalStorage 实现
+// LocalStorage 实现 (推荐)
 type LocalStorage struct {
-	seen   sync.Map // hash -> struct{}
 	states sync.Map // hash -> *atomicState
 }
 
 func NewLocalStorage() *LocalStorage {
-	return &LocalStorage{}
+	return &LocalStorage{
+		// 'seen' map 已被移除
+	}
 }
 
-func (s *LocalStorage) Has(hash string) bool {
-	_, loaded := s.seen.Load(hash)
-	return loaded
-}
-
-func (s *LocalStorage) Mark(hash string) {
-	s.seen.Store(hash, struct{}{})
-}
-
-func (s *LocalStorage) InitState(hash string, neighbors []string) error {
+// InitState 是现在唯一的入口点
+func (s *LocalStorage) InitState(hash string, neighbors []string) (bool, error) {
+	// 1. 检查是否已存在
 	_, loaded := s.states.Load(hash)
 	if loaded {
-		return nil
+		return false, nil // 不是新消息
 	}
 
+	// 2. 准备新状态
 	initial := make(StateMap)
 	for _, n := range neighbors {
 		initial[n] = false
 	}
-
 	state := &atomicState{}
 	state.Store(initial)
-	s.states.Store(hash, state)
-	return nil
+
+	// 3. 尝试原子地存储
+	// LoadOrStore 确保只有一个协程能成功存入
+	_, loaded = s.states.LoadOrStore(hash, state)
+
+	// 4. 返回结果
+	// !loaded 为 true 意味着我们是第一个成功存入的
+	return !loaded, nil
 }
 
+// 获取消息下指定节点的状态
+func (s *LocalStorage) GetState(hash, nodeHash string) bool {
+	val, ok := s.states.Load(hash)
+	if !ok {
+		return false
+	}
+	state := val.(*atomicState).Load()
+	return state[nodeHash]
+}
+
+// 更新消息下节点状态
 func (s *LocalStorage) UpdateState(hash string, from string) error {
 	val, ok := s.states.Load(hash)
 	if !ok {
@@ -71,23 +83,7 @@ func (s *LocalStorage) UpdateState(hash string, from string) error {
 	}
 }
 
-func (s *LocalStorage) GetStates(hash string) (map[string]bool, error) {
-	val, ok := s.states.Load(hash)
-	if !ok {
-		return nil, nil
-	}
-	return val.(*atomicState).Load(), nil
-}
-
-func (s *LocalStorage) GetState(hash, nodeHash string) bool {
-	val, ok := s.states.Load(hash)
-	if !ok {
-		return false
-	}
-	state := val.(*atomicState).Load()
-	return state[nodeHash]
-}
-
+// 标记已发送内容
 func (s *LocalStorage) MarkSent(hash, nodeHash string) {
 	val, ok := s.states.Load(hash)
 	if !ok {
@@ -116,6 +112,15 @@ func (s *LocalStorage) MarkSent(hash, nodeHash string) {
 	}
 }
 
+func (s *LocalStorage) GetStates(hash string) map[string]bool {
+	val, ok := s.states.Load(hash)
+	if !ok {
+		return nil // 返回 nil map
+	}
+	return val.(*atomicState).Load()
+}
+
+// DeleteState (修复版)
 func (s *LocalStorage) DeleteState(hash string) {
-	s.seen.Delete(hash)
+	s.states.Delete(hash) // 只需删除 states
 }

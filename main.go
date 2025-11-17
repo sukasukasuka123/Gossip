@@ -3,10 +3,13 @@ package main
 import (
 	"Gossip/MessageManage"
 	"Gossip/NodeManage"
+	"Gossip/NodeManage/Logger"
 	"Gossip/NodeManage/Router"
 	"Gossip/NodeManage/Storage"
 	"Gossip/NodeManage/TransportMessage"
-	"Gossip/Util/HeartBeat"
+	"fmt" // 引入 fmt 用于字符串格式化
+
+	// "Gossip/Util/HeartBeat"
 	"context"
 	"encoding/json"
 	"log"
@@ -16,92 +19,130 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// 定义节点数量
+const numNodes = 10
+
 func main() {
-	// 明确指定泛型类型为string（根据消息payload类型确定）
-	node1 := createNode[string]("node1", ":8081", "")
-	node2 := createNode[string]("node2", ":8082", "")
-	node3 := createNode[string]("node3", ":8083", "")
+	// 用于存储所有节点的哈希 -> 节点实例
+	nodes := make(map[string]*NodeManage.GossipNode[string])
+	// 用于存储所有节点的哈希 -> 完整 HTTP 端点 URL
+	endpoints := make(map[string]string)
 
-	// 设置节点间的邻居关系
-	addNeighbors(node1, map[string]string{
-		node2.NodeHash: "http://localhost:8082",
-		node3.NodeHash: "http://localhost:8083",
-	})
-	addNeighbors(node2, map[string]string{
-		node1.NodeHash: "http://localhost:8081",
-		node3.NodeHash: "http://localhost:8083",
-	})
-	addNeighbors(node3, map[string]string{
-		node1.NodeHash: "http://localhost:8081",
-		node2.NodeHash: "http://localhost:8082",
-	})
+	// 1. 循环创建 10 个节点和它们的 Logger
+	for i := 1; i <= numNodes; i++ {
+		nodeID := fmt.Sprintf("node%d.txt", i)
+		port := 8080 + i
+		addr := fmt.Sprintf(":%d", port)               // HTTP 监听地址 (e.g., ":8081")
+		url := fmt.Sprintf("http://localhost%s", addr) // 完整 URL (e.g., "http://localhost:8081")
 
-	// 启动HTTP服务
-	startServer(node1, ":8081")
-	startServer(node2, ":8082")
-	startServer(node3, ":8083")
+		// 初始化 Logger (取值以匹配 GossipNode 字段)
+		nodeLogger := *Logger.NewLogger()
 
-	// 启动心跳检测
-	go HeartBeat.Heartbeat("http://localhost:8081/RecieveMessage")
-	go HeartBeat.Heartbeat("http://localhost:8082/RecieveMessage")
-	go HeartBeat.Heartbeat("http://localhost:8083/RecieveMessage")
+		// 创建节点。nodeID 将作为 NodeHash，同时也是日志文件名。
+		node := createNode[string](nodeID, addr, nodeLogger, "")
+
+		nodes[nodeID] = node
+		endpoints[nodeID] = url
+	}
+
+	// 2. 设置邻居关系 (创建全连接网络：每个节点都连接其他所有节点)
+	for _, node := range nodes {
+		neighbors := make(map[string]string)
+		for hash, ep := range endpoints {
+			if hash != node.NodeHash {
+				neighbors[hash] = ep
+			}
+		}
+		addNeighbors(node, neighbors)
+	}
+
+	// 3. 启动 HTTP 服务
+	for _, node := range nodes {
+		// startServer 需要传入监听地址 (addr)，它存储在 node.Neighbors[node.NodeHash] 中
+		startServer(node, node.Neighbors[node.NodeHash])
+	}
 
 	// 等待服务启动
 	time.Sleep(2 * time.Second)
 
-	// 从node1发送测试消息
-	testMsg := MessageManage.GossipMessage[string]{
-		Hash:    "test-message-123",
-		Payload: "Hello Gossip Network!",
-	}
-	data, err := json.Marshal(testMsg)
-	if err != nil {
-		log.Fatalf("消息序列化失败: %v", err)
-	}
-	// 发送消息到自身节点进行传播
-	err = node1.Transport.SendMessage(context.Background(),
-		"http://localhost:8081", data)
-	if err != nil {
-		log.Printf("发送消息失败: %v", err)
+	// 4. 传输 4 个消息，分别从 node1, node2, node3, node4 启动
+	sourceHashes := []string{"node1.txt", "node2.txt", "node3.txt", "node4.txt"}
+
+	for i, sourceHash := range sourceHashes {
+		sourceNode := nodes[sourceHash]
+		msgHash := fmt.Sprintf("test-message-%d", i+1)
+
+		testMsg := MessageManage.GossipMessage[string]{
+			Hash:     msgHash,
+			FromHash: "", // 源发消息
+			Payload:  fmt.Sprintf("Payload for %s, from %s", msgHash, sourceHash),
+		}
+
+		data, err := json.Marshal(testMsg)
+		if err != nil {
+			log.Fatalf("消息 %s 序列化失败: %v", msgHash, err)
+		}
+
+		// 目标 URL 是源节点自身的完整 URL
+		targetURL := endpoints[sourceHash]
+
+		err = sourceNode.Transport.SendMessage(context.Background(), targetURL, data)
+		if err != nil {
+			log.Printf("发送消息 %s 失败 from %s: %v", msgHash, sourceHash, err)
+		}
+		log.Printf("测试消息 %s 已发送，源节点: %s", msgHash, sourceHash)
 	}
 
-	// 等待消息传播
+	// 最终等待
+	log.Println("等待10秒以便消息传播...")
 	time.Sleep(10 * time.Second)
-	log.Println("测试完成，查看节点日志验证消息传播情况")
+	log.Println("测试完成，请检查 node1.txt 至 node10.txt 的日志文件")
 }
 
-// 创建节点辅助函数（明确泛型参数）
-func createNode[T any](nodeID, endpoint string, payload T) *NodeManage.GossipNode[T] {
+// ====================================================================
+// 辅助函数 (保持不变，但 StartServer 使用了 NodeHash 作为地址获取 URL)
+// ====================================================================
+
+func createNode[T any](
+	nodeID string,
+	endpoint string,
+	customLogger Logger.Logger,
+	payload T,
+) *NodeManage.GossipNode[T] {
 	storage := Storage.NewLocalStorage()
 	transport := TransportMessage.NewHttpTransport()
 	router := Router.NewFanoutRouter()
-	// 正确传递payload参数（与T类型匹配）
-	return NodeManage.NewGossipNode[T](
+
+	// 使用 NewGossipNode 构造函数
+	node := NodeManage.NewGossipNode[T](
 		nodeID,
 		endpoint,
-		payload, // 这里使用传入的payload参数，与T类型一致
+		payload,
 		storage,
 		transport,
 		router,
+		customLogger,
 	)
+	// 将自己的监听地址也添加到 Neighbors 中，方便 startServer 调用
+	node.Neighbors[nodeID] = endpoint
+	return node
 }
 
-// 添加邻居辅助函数
 func addNeighbors[T any](node *NodeManage.GossipNode[T], neighbors map[string]string) {
 	for hash, endpoint := range neighbors {
-		node.Neighbors[hash] = endpoint
-		node.Cost[hash] = 1.0 // 设置默认通信代价
+		node.AddNeighbor(hash, endpoint)
 	}
 }
 
-// 启动HTTP服务器
 func startServer[T any](node *NodeManage.GossipNode[T], addr string) {
 	r := gin.Default()
 	node.RegisterRoutes(r)
 	go func() {
 		if err := http.ListenAndServe(addr, r); err != nil && err != http.ErrServerClosed {
-			log.Printf("节点 %s 启动失败: %v", node.NodeHash, err)
+			logText := fmt.Sprintf("节点 %s 启动失败: %v", node.NodeHash, err)
+			node.Logger.Log(logText, node.NodeHash)
 		}
 	}()
-	log.Printf("节点 %s 已启动，监听地址: %s", node.NodeHash, addr)
+	logText := fmt.Sprintf("节点 %s 已启动，监听地址: %s", node.NodeHash, addr)
+	node.Logger.Log(logText, node.NodeHash)
 }
