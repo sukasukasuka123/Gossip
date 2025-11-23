@@ -20,4 +20,7 @@ type Storage interface {
 
 	// DeleteState 当所有邻居都确认后，删除状态
 	DeleteState(hash string)
+
+	cleanupSeenCacheLoop()
+	UpdateShortTTL() int64
 }

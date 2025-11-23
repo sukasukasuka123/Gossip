@@ -109,7 +109,7 @@ func createNode[T any](
 	customLogger Logger.Logger,
 	payload T,
 ) *NodeManage.GossipNode[T] {
-	storage := Storage.NewLocalStorage()
+	storage := Storage.NewLocalStorage(4, 10*time.Minute)
 	transport := TransportMessage.NewHttpTransport()
 	router := Router.NewFanoutRouter()
 

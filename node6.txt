@@ -1,10 +1,10 @@
-2025/11/17 15:46:38.169408		|		 节点 node6.txt 已启动，监听地址: :8086
-2025/11/17 15:46:40.368911		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-1 (from node7.txt)
-2025/11/17 15:46:40.427262		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-3 (from node3.txt)
-2025/11/17 15:46:40.444453		|		 [DEBUG] Received ACK for hash test-message-1 from node3.txt
-2025/11/17 15:46:40.469160		|		 [DEBUG] Received ACK for hash test-message-1 from node1.txt
-2025/11/17 15:46:40.503976		|		 [DEBUG] Received ACK for hash test-message-3 from node9.txt
-2025/11/17 15:46:40.524392		|		 [DEBUG] Received ACK for hash test-message-3 from node3.txt
-2025/11/17 15:46:40.527811		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-4 (from node4.txt)
-2025/11/17 15:46:40.595083		|		 [DEBUG] Received ACK for hash test-message-4 from node2.txt
-2025/11/17 15:46:40.597245		|		 [DEBUG] Received ACK for hash test-message-4 from node8.txt
+2025/11/23 14:37:37.827150		|		 节点 node6.txt 已启动，监听地址: :8086
+2025/11/23 14:37:39.905306		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-2 (from node8.txt)
+2025/11/23 14:37:39.969226		|		 [DEBUG] Received ACK for hash test-message-2 from node1.txt
+2025/11/23 14:37:39.970941		|		 [DEBUG] Received ACK for hash test-message-2 from node2.txt
+2025/11/23 14:37:39.975300		|		 [DEBUG] Repeated message received: test-message-2 (from node7.txt). Sending ACK only.
+2025/11/23 14:37:40.040469		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-4 (from node9.txt)
+2025/11/23 14:37:40.083013		|		 [DEBUG] Repeated message received: test-message-4 (from node5.txt). Sending ACK only.
+2025/11/23 14:37:40.083623		|		 [DEBUG] Received ACK for hash test-message-4 from node3.txt
+2025/11/23 14:37:40.092089		|		 [DEBUG] Received ACK for hash test-message-4 from node9.txt
+2025/11/23 14:37:40.098300		|		 [DEBUG] Repeated message received: test-message-4 (from node10.txt). Sending ACK only.
