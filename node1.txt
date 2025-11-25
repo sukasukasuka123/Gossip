@@ -1,23 +1,26 @@
-2025/11/25 11:17:54.211029		|		 [INFO] Short TTL updated to 8 seconds.
-2025/11/25 11:17:54.212355		|		 [INFO] Short TTL updated to 8 seconds.
-2025/11/25 11:17:54.215449		|		 [INFO] Short TTL updated to 8 seconds.
-2025/11/25 11:17:54.216053		|		 [INFO] Short TTL updated to 16 seconds.
-2025/11/25 11:17:54.216741		|		 [INFO] Short TTL updated to 16 seconds.
-2025/11/25 11:17:54.217359		|		 [INFO] Short TTL updated to 16 seconds.
-2025/11/25 11:17:54.217866		|		 [INFO] Short TTL updated to 16 seconds.
-2025/11/25 11:17:54.217866		|		 [INFO] Short TTL updated to 32 seconds.
-2025/11/25 11:17:54.223859		|		 [INFO] Short TTL updated to 32 seconds.
-2025/11/25 11:17:54.296734		|		 节点 node1.txt 已启动，监听地址: :8081
-2025/11/25 11:17:56.361962		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-1 (from )
-2025/11/25 11:17:56.380897		|		 [DEBUG] Received ACK for hash test-message-1 from node5.txt
-2025/11/25 11:17:56.381531		|		 [DEBUG] Received ACK for hash test-message-1 from node4.txt
-2025/11/25 11:17:56.495207		|		 [DEBUG] Repeated message received: test-message-1 (from node2.txt). Sending ACK only.
-2025/11/25 11:17:56.548481		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-3 (from node3.txt)
-2025/11/25 11:17:56.606938		|		 [DEBUG] Received ACK for hash test-message-3 from node8.txt
-2025/11/25 11:17:56.606938		|		 [DEBUG] Received ACK for hash test-message-3 from node9.txt
-2025/11/25 11:17:56.615378		|		 [DEBUG] Repeated message received: test-message-3 (from node9.txt). Sending ACK only.
-2025/11/25 11:17:56.673650		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-4 (from node6.txt)
-2025/11/25 11:17:56.838389		|		 [DEBUG] Received ACK for hash test-message-4 from node4.txt
-2025/11/25 11:17:56.838893		|		 [DEBUG] Received ACK for hash test-message-4 from node8.txt
-2025/11/25 11:17:56.842972		|		 [DEBUG] Repeated message received: test-message-4 (from node3.txt). Sending ACK only.
-2025/11/25 11:17:56.918905		|		 [DEBUG] Repeated message received: test-message-4 (from node5.txt). Sending ACK only.
+2025/11/25 11:37:49.288401		|		 [INFO] Short TTL updated to 8 seconds.
+2025/11/25 11:37:49.288907		|		 [INFO] Short TTL updated to 8 seconds.
+2025/11/25 11:37:49.289908		|		 [INFO] Short TTL updated to 8 seconds.
+2025/11/25 11:37:49.316074		|		 [INFO] Short TTL updated to 16 seconds.
+2025/11/25 11:37:49.317070		|		 [INFO] Short TTL updated to 16 seconds.
+2025/11/25 11:37:49.317070		|		 [INFO] Short TTL updated to 16 seconds.
+2025/11/25 11:37:49.318067		|		 [INFO] Short TTL updated to 16 seconds.
+2025/11/25 11:37:49.320060		|		 [INFO] Short TTL updated to 32 seconds.
+2025/11/25 11:37:49.321060		|		 [INFO] Short TTL updated to 32 seconds.
+2025/11/25 11:37:49.529774		|		 节点 node1.txt 已启动，监听地址: :8081
+2025/11/25 11:37:51.635499		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-1 (from )
+2025/11/25 11:37:51.678238		|		 [DEBUG] Received ACK for hash test-message-1 from node2.txt
+2025/11/25 11:37:51.678929		|		 [DEBUG] Received ACK for hash test-message-1 from node9.txt
+2025/11/25 11:37:51.678929		|		 [DEBUG] Repeated message received: test-message-1 (from node2.txt). Sending ACK only.
+2025/11/25 11:37:51.821392		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-2 (from node5.txt)
+2025/11/25 11:37:51.848739		|		 [DEBUG] Repeated message received: test-message-2 (from node8.txt). Sending ACK only.
+2025/11/25 11:37:51.922366		|		 [DEBUG] Received ACK for hash test-message-2 from node8.txt
+2025/11/25 11:37:51.924637		|		 [DEBUG] Received ACK for hash test-message-2 from node9.txt
+2025/11/25 11:37:51.929928		|		 [DEBUG] Repeated message received: test-message-2 (from node6.txt). Sending ACK only.
+2025/11/25 11:37:51.938556		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-4 (from node7.txt)
+2025/11/25 11:37:52.061317		|		 [DEBUG] Repeated message received: test-message-2 (from node9.txt). Sending ACK only.
+2025/11/25 11:37:52.121302		|		 [DEBUG] Received ACK for hash test-message-4 from node8.txt
+2025/11/25 11:37:52.122743		|		 [DEBUG] Received ACK for hash test-message-4 from node7.txt
+2025/11/25 11:37:52.157108		|		 [INFO] NEW MESSAGE RECEIVED and accepted: test-message-3 (from node4.txt)
+2025/11/25 11:37:52.195342		|		 [DEBUG] Received ACK for hash test-message-3 from node9.txt
+2025/11/25 11:37:52.195844		|		 [DEBUG] Received ACK for hash test-message-3 from node8.txt

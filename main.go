@@ -7,11 +7,9 @@ import (
 	"Gossip/NodeManage/Router"
 	"Gossip/NodeManage/Storage"
 	"Gossip/NodeManage/TransportMessage"
-	"fmt" // 引入 fmt 用于字符串格式化
-
-	// "Gossip/Util/HeartBeat"
 	"context"
 	"encoding/json"
+	"fmt" // 引入 fmt 用于字符串格式化
 	"log"
 	"net/http"
 	"time"
@@ -94,8 +92,8 @@ func main() {
 	}
 
 	// 最终等待
-	log.Println("等待10秒以便消息传播...")
-	time.Sleep(10 * time.Second)
+	log.Println("等待60秒以便消息传播...")
+	time.Sleep(60 * time.Second)
 	log.Println("测试完成，请检查 node1.txt 至 node10.txt 的日志文件")
 }
 
