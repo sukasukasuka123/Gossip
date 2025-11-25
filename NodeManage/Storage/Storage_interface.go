@@ -22,5 +22,6 @@ type Storage interface {
 	DeleteState(hash string)
 
 	cleanupSeenCacheLoop()
-	UpdateShortTTL() int64
+	UpdateShortLimit(a int) int64
+	RecieveAck()
 }

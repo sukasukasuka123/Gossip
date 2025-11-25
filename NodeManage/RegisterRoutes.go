@@ -85,6 +85,8 @@ func (n *GossipNode[T]) HandleReceiveAck(c *gin.Context) {
 	logText := fmt.Sprintf("[DEBUG] Received ACK for hash %s from %s", ack.Hash, ack.FromHash)
 	n.Logger.Log(logText, n.NodeHash)
 
+	n.Storage.RecieveAck()
+
 	n.Storage.UpdateState(ack.Hash, ack.FromHash)
 
 	state := n.Storage.GetStates(ack.Hash)

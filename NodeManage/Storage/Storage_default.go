@@ -8,20 +8,27 @@ import (
 
 // LocalStorage 实现
 type LocalStorage struct {
-	// 短期工作台：存复杂的广播状态 (Hash -> *atomicState)
-	states   sync.Map
-	shortTTL atomic.Int64 // 单位秒
-	// 长期记忆：存 Hash -> time.Time
+	states    sync.Map
 	seenCache sync.Map
-	longTTL   time.Duration
+
+	shortTTL   atomic.Int64 // 当前 TTL
+	shortLimit atomic.Int64 // max TTL
+	ttlChan    chan TTLEvent
+
+	longTTL time.Duration
 }
 
-// 创建 LocalStorage 实例，shortTTL 单位为秒
 func NewLocalStorage(shortTTLSec int64, longTTL time.Duration) *LocalStorage {
-	s := &LocalStorage{}
+	s := &LocalStorage{
+		ttlChan: make(chan TTLEvent, 32),
+		longTTL: longTTL,
+	}
 	s.shortTTL.Store(shortTTLSec)
-	s.longTTL = longTTL
+	s.shortLimit.Store(shortTTLSec * 2) // 初始 limit = 2x，可调
+
 	go s.cleanupSeenCacheLoop()
+	go s.ttlLoop() // 核心反应堆
+
 	return s
 }
 
@@ -142,9 +149,25 @@ func (s *LocalStorage) cleanupSeenCacheLoop() {
 	}
 }
 
-// 原子更新 shortTTL
-func (s *LocalStorage) UpdateShortTTL() int64 {
-	return s.shortTTL.Add(2)
+// 原子更新 shortLimit
+func (s *LocalStorage) UpdateShortLimit(nodeNum int) int64 {
+	cur := s.shortLimit.Load()
+
+	// 判断条件：新邻居数量 * 2 > 当前 Limit
+	if int64(nodeNum)*2 <= cur {
+		return cur // 不增长
+	}
+
+	// 做指数增长
+	newLimit := cur * 2
+
+	// 不超过 64s
+	if newLimit > 64 {
+		newLimit = 64
+	}
+
+	s.shortLimit.Store(newLimit)
+	return newLimit
 }
 
 // // 主动清空 shortTTL 下的所有状态
