@@ -1,10 +1,11 @@
 package NodeManage
 
 import (
-	"Gossip/MessageManage"
-	pb "Gossip/gossip_rpc/proto"
 	"context"
 	"fmt"
+
+	"github.com/sukasukasuka123/Gossip/MessageManage"
+	pb "github.com/sukasukasuka123/Gossip/gossip_rpc/proto"
 )
 
 func pbToInternal(msg *pb.GossipMessage) MessageManage.GossipMessage[[]byte] {

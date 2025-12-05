@@ -1,15 +1,16 @@
 package NodeManage
 
 import (
-	"Gossip/GossipClientFactory"
-	"Gossip/NodeManage/Logger"
-	"Gossip/NodeManage/Router"
-	"Gossip/NodeManage/Storage"
-	pb "Gossip/gossip_rpc/proto"
 	"fmt"
 	"log"
 	"net"
 	"time"
+
+	"github.com/sukasukasuka123/Gossip/GossipClientFactory"
+	"github.com/sukasukasuka123/Gossip/NodeManage/Logger"
+	"github.com/sukasukasuka123/Gossip/NodeManage/Router"
+	"github.com/sukasukasuka123/Gossip/NodeManage/Storage"
+	pb "github.com/sukasukasuka123/Gossip/gossip_rpc/proto"
 
 	"google.golang.org/grpc"
 )

@@ -1,11 +1,12 @@
 package GossipClientFactory
 
 import (
-	pb "Gossip/gossip_rpc/proto"
 	"context"
 	"fmt"
 	"sync"
 	"time"
+
+	pb "github.com/sukasukasuka123/Gossip/gossip_rpc/proto"
 
 	"google.golang.org/grpc"
 )

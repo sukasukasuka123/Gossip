@@ -1,4 +1,4 @@
-module Gossip
+module github.com/sukasukasuka123/Gossip
 
 go 1.24.0
 

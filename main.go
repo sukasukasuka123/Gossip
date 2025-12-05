@@ -1,14 +1,15 @@
 package main
 
 import (
-	"Gossip/NodeManage"
-	"Gossip/NodeManage/Logger"
-	"Gossip/NodeManage/Router"
-	"Gossip/NodeManage/Storage"
-	pb "Gossip/gossip_rpc/proto"
 	"context"
 	"fmt"
 	"time"
+
+	"github.com/sukasukasuka123/Gossip/NodeManage"
+	"github.com/sukasukasuka123/Gossip/NodeManage/Logger"
+	"github.com/sukasukasuka123/Gossip/NodeManage/Router"
+	"github.com/sukasukasuka123/Gossip/NodeManage/Storage"
+	pb "github.com/sukasukasuka123/Gossip/gossip_rpc/proto"
 )
 
 // 测试函数：20个节点，每个节点发送3条消息
