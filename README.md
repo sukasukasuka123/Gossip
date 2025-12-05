@@ -1,205 +1,235 @@
-# Gossip 协议系统说明文档
+# Gossip 协议系统说明文档（基于 gRPC 的新版）
 
-一个实现 Gossip 协议的分布式消息传播系统，具有自适应 TTL 管理和高效的状态追踪功能。
+一个基于 **gRPC 传输层** 的分布式 Gossip 协议系统，实现节点间的去中心化消息广播、重复抑制、基于 ACK 的确认与可靠传播、以及按拓扑结构自适应的 TTL 状态管理。
+
+本版 README 已完全更新为 **gRPC 版本**，删除旧的 HTTP/gin 相关内容，文档重点转向 gRPC 服务接口、客户端工厂、节点模型更新后的调用方式和参数说明。
+
+---
 
 ## 系统概述
 
-本系统实现了一个点对点的 Gossip 协议，节点通过向邻居子集广播消息（基于 fanout 的传播）进行通信。系统具有自动去重检测、基于确认的消息确认机制，以及自适应的消息状态管理。
+系统采用 Gossip（谣言式扩散）机制进行消息传播：节点收到消息后去重、确认、再向部分邻居广播，最终消息可在网络中快速“泛洪”。新版本将底层传输从 HTTP/gin 替换为 **Protocol Buffers + gRPC**，实现更高吞吐、更低延迟、支持连接复用与双向通信，为生产级调度提供基础。
 
-## 核心组件
+核心变化：
 
-### 1. 消息管理 (`MessageManage`)
+* 使用 protobuf 定义 Gossip RPC 协议。
+* 每个节点启动一个 gRPC 服务器，注册 Gossip 服务。
+* 通过 **GossipClientFactory** 实现可复用的 gRPC 客户端连接（Dial 缓存）。
+* 所有消息、ACK 均通过 RPC 方法 `PutMessageToClient` 发送。
 
-**GossipMessage[T]**: 泛型消息结构，包含：
-- `Hash`: 消息唯一标识符
-- `FromHash`: 发送节点标识符
-- `Payload`: 泛型载荷，类型为 T
+---
 
-**GossipAck**: 确认消息结构，用于确认消息接收
+## 模块结构
 
-### 2. 节点管理 (`NodeManage`)
+### 1. protobuf 层（proto/）
 
-**GossipNode[T]**: 核心节点实现，具有：
-- 邻居管理和端点追踪
-- 基于代价的路由决策
-- 可配置的 fanout（默认：3）
-- 可插拔的存储、传输、路由和日志接口
+定义了 Gossip RPC 协议：
 
-**核心方法**:
-- `HandleReceiveMessage`: 处理接收的消息，初始化状态，发送 ACK，并向邻居广播
-- `HandleReceiveAck`: 处理确认消息，当所有邻居确认后触发状态清理
-- `AddNeighbor`: 动态添加邻居并更新 TTL 限制
+* GossipMessage：包含 hash、来源节点、payload。
+* GossipAck：确认消息。
+* Gossip 服务：提供 `PutMessageToClient` RPC。
 
-### 3. 存储 (`Storage`)
+生成文件：
 
-**LocalStorage**: 使用 `sync.Map` 和原子操作实现的线程安全消息状态管理
+* `gossip_rpc.pb.go`
+* `gossip_rpc_grpc.pb.go`
 
-**功能特性**:
-- 通过 `seenCache` 实现重复检测
-- 针对每条消息的邻居状态追踪
-- 自适应 TTL 系统，具有双层超时机制：
-  - **短 TTL (Short TTL)**: 活跃消息状态的动态超时（2-64 秒）
-  - **长 TTL (Long TTL)**: 扩展缓存保留时间（默认：10 分钟）
-- TTL 过期后自动清理状态
+这些文件为服务器和客户端提供 Go API。
 
-**自适应 TTL 机制**:
-- **添加邻居时**: 短 TTL 限制翻倍（指数增长，最大 64 秒）
-- **收到 ACK 时**: 当前 TTL 向限制值靠近（指数逼近）
-- **周期性衰减**: 每 3 秒当前 TTL 减少 1 秒（渐进式降低，最小 2 秒）
+---
 
-### 4. 路由 (`Router`)
+### 2. 节点管理（NodeManage/）
 
-**FanoutRouter**: 默认路由策略，功能包括：
-- 从未接收/未确认消息的邻居中选择目标
-- 按代价优先排序（升序）
-- 遵守配置的 fanout 限制
+新版 `GossipNode` 已非泛型，结构被重写以使用 gRPC。
 
-### 5. 传输 (`TransportMessage`)
+核心内容：
 
-**HttpTransport**: 基于 HTTP 的消息传输，实现：
-- `SendMessage`: POST 到 `/RecieveMessage` 端点
-- `SendAck`: POST 到 `/RecieveAck` 端点
+* 嵌入 `pb.UnimplementedGossipServer`，作为 RPC 服务端。
+* 维护邻居映射（neighborHash → endpoint）。
+* 内置 TTL 状态机、重复检测、邻居 ACK 统计。
+* 使用 GossipClientFactory 进行 RPC 调用。
 
-### 6. 日志 (`Logger`)
+#### 关键方法
 
-**LogStruct**: 基于文件的日志记录器，具有：
-- 带时间戳的日志条目
-- 并发安全的文件操作
-- 双输出（文件 + 控制台）
+**StartGRPCServer(port string)**
 
-## 系统流程
+* 启动 gRPC 服务，监听端口。
+* 注册 Gossip 服务实现。
 
-### 消息传播过程
+**PutMessageToClient(context, *pb.GossipMessage)**
 
-1. **初始广播**: 源节点将消息发送给自己
-2. **状态初始化**: 节点为所有邻居初始化状态映射（全部标记为 `false`）
-3. **立即 ACK**: 接收节点立即向发送者返回 ACK
-4. **重复检查**: 如果消息已见过，只发送 ACK（不再广播）
-5. **Fanout 选择**: 路由器选择前 N 个（按代价）未联系的邻居
-6. **标记并发送**: 在异步发送前将选定的邻居标记为已联系
-7. **接收 ACK**: 收到 ACK 后，邻居状态更新为 `true`
-8. **完成检查**: 当所有邻居标记为 `true` 时，安排延迟删除状态
-9. **延迟清理**: 在 `邻居数量 * 1 秒` 延迟后删除状态
+* RPC 接收入口。
+* 完成去重、初始化状态、记录 ACK、广播给 fanout 邻居。
 
-### TTL 动态调整示例
+**AddNeighbor(nodeHash, endpoint)**
+
+* 动态添加邻居端点（如："127.0.0.1:9001"）。
+* 更新 TTL 限制参数。
+
+内部广播全部通过：
+
+**broadcastToTargets(targets []string, msg *pb.GossipMessage)**
+
+* 为每个 target 取出客户端
+* 构造 context with timeout
+* 执行异步 RPC
+
+---
+
+### 3. GossipClientFactory（可复用的客户端连接池）
+
+文件：`GossipClientFactory/GossipClientFactory.go`
+
+用于缓存 Dial 的 grpc.ClientConn：
+
+* 相同 endpoint 的连接不会重复拨号
+* 节省连接建立成本
+* 提供 Release() 方法统一关闭
+* 提供 ContextWithTimeout 创建外发 RPC 的超时上下文
+
+使用方式示例：
 
 ```
-初始状态: shortTTL=4秒, shortLimit=8秒
-
-事件: 添加新邻居
-→ shortLimit: 8秒 → 16秒
-
-事件: 收到 ACK (shortTTL=4秒, shortLimit=16秒)
-→ 增量 = (16-4)/2 = 6秒
-→ shortTTL: 4秒 → 10秒
-
-事件: 3秒周期触发（无活动）
-→ shortTTL: 10秒 → 9秒 → 8秒 → 7秒...
-
-事件: 收到 ACK (shortTTL=7秒, shortLimit=16秒)
-→ 增量 = (16-7)/2 = 4.5秒 → 5秒（向上取整）
-→ shortTTL: 7秒 → 12秒
+cli := factory.GetClient(endpoint)
+resp, err := cli.PutMessageToClient(ctx, msg)
 ```
 
-## 测试配置 (main.go)
+---
 
-测试设置创建了一个 10 节点全连接网络：
+### 4. 存储与 TTL
 
-- **节点**: `node1.txt` 到 `node10.txt`
-- **端口**: 8081-8090
-- **拓扑**: 全网格（每个节点连接到所有其他节点）
-- **测试消息**: 从节点 1-4 发送 4 条消息
-- **消息格式**: `test-message-{1-4}`
+仍使用之前的 LocalStorage 管理：
 
-### 运行测试
+* 消息已见（seen）缓存
+* 邻居 ACK 状态表
+* 自适应 TTL（2～64 秒范围）
+* 长 TTL 缓存 10 分钟
+* 周期衰减机制维持稳定内存占用
 
-```bash
-go run main.go
+TTL 行为不因迁移到 gRPC 而改变。
+
+---
+
+## gRPC API 定义说明
+
+### RPC：PutMessageToClient
+
+```
+rpc PutMessageToClient(GossipMessage) returns (GossipAck)
 ```
 
-**预期行为**:
-- 所有 10 个节点接收全部 4 条消息
-- 每条消息每跳使用 fanout=3 传播
-- 日志写入 `node1.txt` 到 `node10.txt`
-- 测试在 10 秒后完成
+作用：
 
-## 配置参数
+* 接收消息 / 去重
+* 初始化状态
+* 返回 ACK
+* fanout 广播
 
-| 参数 | 默认值 | 描述 |
-|-----------|---------|-------------|
-| Fanout | 3 | 每条消息最多广播给多少个邻居 |
-| Short TTL | 4秒 | 初始活跃状态超时 |
-| Short Limit | 8秒 | 初始最大 TTL（随邻居增长） |
-| Long TTL | 10分钟 | 已见缓存保留期 |
-| TTL 衰减间隔 | 3秒 | TTL 减少的频率 |
-| 清理间隔 | 1分钟 | 已见缓存清理频率 |
+入参：pb.GossipMessage
 
-## API 端点
+* hash：消息唯一 ID
+* fromHash：来源节点
+* payload：字符串载荷
 
-### POST `/RecieveMessage`
-接收 `GossipMessage[T]` JSON 请求体
-- 为新消息初始化状态
-- 向发送者发送 ACK
-- 向 fanout 邻居广播
+返回：pb.GossipAck
 
-### POST `/RecieveAck`
-接收 `GossipAck` JSON 请求体
-- 更新邻居状态
-- 所有邻居确认后触发清理
+* hash：同一消息 hash
+* from：接收方节点 hash
 
-## 关键设计特性
+---
 
-1. **原子状态管理**: 使用无锁 CAS 操作进行状态更新
-2. **重复抑制**: 已见缓存防止冗余处理
-3. **自适应 TTL**: 根据网络活动自动调整超时
-4. **延迟删除**: 宽限期防止过早清理状态
-5. **泛型实现**: 通过 Go 泛型支持类型安全的载荷
-6. **可插拔架构**: 存储、传输、路由和日志的接口化设计
+## GossipNode 的主要使用方法
 
-## 依赖项
+### 1. 创建节点
 
 ```go
-github.com/gin-gonic/gin  // HTTP 路由框架
+node := NewGossipNode(
+    selfHash,
+    endpoint,
+    storage,
+    router,
+    logger,
+    clientFactory,
+)
 ```
 
-## 文件结构
+### 2. 启动 gRPC 服务
+
+```go
+node.StartGRPCServer(":9001")
+```
+
+### 3. 添加邻居
+
+```go
+node.AddNeighbor("node2", "127.0.0.1:9002")
+```
+
+### 4. 主动发消息（本地触发）
+
+```go
+msg := &pb.GossipMessage{Hash: "123", FromHash: node.Hash, Payload: "hello"}
+node.PutMessageToClient(context.Background(), msg)
+```
+
+---
+
+## main.go 测试逻辑（新版）
+
+新版示例测试创建 **20 个节点**，端口从 6001 到 6020，以 **环形拓扑** 相互连接。
+
+流程：
+
+1. 初始化统一 storage/router/logger
+2. 创建 20 个 GossipNode
+3. 每个节点启动 gRPC 服务
+4. 构建环形邻居（i → i+1）
+5. 从每个节点发送 3 条测试消息
+6. 等待传播完成后退出
+
+**不再使用任何 HTTP / gin / JSON**。
+
+---
+
+## 当前文件结构
 
 ```
 Gossip/
-├── MessageManage/      # 消息和 ACK 结构
-├── NodeManage/         # 核心 gossip 节点逻辑
-│   ├── Logger/         # 日志接口和实现
-│   ├── Router/         # 路由策略
-│   ├── Storage/        # 状态管理和 TTL 系统
-│   └── TransportMessage/ # 网络传输
-└── main.go             # 测试设置和执行
+├── gossip_rpc/              # 生成的 protobuf RPC 文件
+├── proto/                   # .proto 文件
+├── NodeManage/              # gRPC 化后的 GossipNode
+│   ├── gossip_grpc.go       # RPC 处理、广播逻辑
+│   ├── AddNeighbor.go
+│   ├── node_model.go
+│   └── ...
+├── GossipClientFactory/     # gRPC 客户端工厂
+├── go.mod / go.sum
+└── main.go                  # gRPC 测试入口
 ```
+
+---
 
 ## 当前限制
 
-- 无加密或身份验证
-- 基于 HTTP 的传输（非生产级别）
-- 仅内存状态（无持久化）
-- 固定的 fanout 配置
-- 无故障检测或恢复机制
+* 无 TLS / 认证
+* 无连接心跳或健康检查
+* 固定 fanout=3
+* 无持久化状态
+* 单向 RPC（并未使用流式）
 
-## 未来改进方向
+---
 
-- 添加 TLS 支持以实现安全通信
-- 实现故障检测和节点健康检查
-- 支持动态 fanout 调整
-- 添加指标和监控端点
-- 实现状态持久化以实现崩溃恢复
-- 支持自定义载荷序列化格式
+## 未来改进方向（基于 gRPC 的路线）
 
-## 工作原理总结
+* 增加 TLS、token 或 mTLS 身份校验
+* 引入 gRPC bidirectional streaming，支持批量广播
+* 添加健康检查与失败节点剔除机制
+* 动态调节 fanout
+* 增加持久化状态实现崩溃恢复
+* 增加监控、指标、可视化工具
 
-这是一个去中心化的消息传播系统。每个节点维护一张消息状态表，记录每条消息在各个邻居处的传播状态。当节点收到新消息时：
+---
 
-1. 首先检查是否已见过（去重）
-2. 立即向发送者返回 ACK（确认收到）
-3. 根据 fanout 策略选择若干邻居进行转发
-4. 收集所有邻居的 ACK
-5. 当所有邻居都确认后，延迟删除该消息的状态
+## 总结
 
-系统通过自适应 TTL 机制平衡内存使用和可靠性：网络活跃时延长状态保留时间，网络空闲时缩短保留时间。这确保了消息能够可靠传播到所有节点，同时避免了状态表无限增长。
+新版系统保留了原 Gossip 算法的核心机制（去重、ACK、fanout、TTL），同时将网络层彻底替换为 gRPC，实现更快、更稳定、可扩展的传输基础设施。整个项目的结构更清晰，节点启动、邻居维护、消息处理都围绕 gRPC API 展开，更适合继续扩展成真实的分布式系统原型。
