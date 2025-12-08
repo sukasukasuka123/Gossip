@@ -19,7 +19,7 @@ func (LogStruct) Log(content string, fileName string) {
 	file, err := os.OpenFile(fileName, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		// 如果无法打开日志文件，则退回到标准错误输出进行警告
-		log.Printf("[ERROR] Failed to open log file %s: %v", fileName, err)
+		log.Printf("[Gossip-Logger][ERROR] Failed to open log file %s: %v", fileName, err)
 		return
 	}
 	defer file.Close() // 2. 确保文件句柄在函数退出时被关闭
@@ -28,9 +28,9 @@ func (LogStruct) Log(content string, fileName string) {
 	timestamp := time.Now().Format("2006/01/02 15:04:05.000000")
 
 	// 4. 将格式化后的内容写入文件，并添加换行符
-	_, err = fmt.Fprintf(file, "%s		|		 %s\n", timestamp, content)
+	_, err = fmt.Fprintf(file, "[Gossip-Logger]|		%s		|		 %s\n", timestamp, content)
 	fmt.Printf("%s		|		 %s\n", timestamp, content)
 	if err != nil {
-		log.Printf("[ERROR] Failed to write to log file %s: %v", fileName, err)
+		log.Printf("[Gossip-Logger][ERROR] Failed to write to log file %s: %v", fileName, err)
 	}
 }

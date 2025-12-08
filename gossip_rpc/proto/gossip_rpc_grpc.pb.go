@@ -19,14 +19,15 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Gossip_PutMessageToClient_FullMethodName = "/gossip_rpc.Gossip/PutMessageToClient"
+	Gossip_Stream_FullMethodName = "/gossip_rpc.Gossip/Stream"
 )
 
 // GossipClient is the client API for Gossip service.
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GossipClient interface {
-	PutMessageToClient(ctx context.Context, in *GossipMessage, opts ...grpc.CallOption) (*GossipACK, error)
+	// 双向流式 Gossip
+	Stream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipMessage, GossipACK], error)
 }
 
 type gossipClient struct {
@@ -37,21 +38,25 @@ func NewGossipClient(cc grpc.ClientConnInterface) GossipClient {
 	return &gossipClient{cc}
 }
 
-func (c *gossipClient) PutMessageToClient(ctx context.Context, in *GossipMessage, opts ...grpc.CallOption) (*GossipACK, error) {
+func (c *gossipClient) Stream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipMessage, GossipACK], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	out := new(GossipACK)
-	err := c.cc.Invoke(ctx, Gossip_PutMessageToClient_FullMethodName, in, out, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Gossip_ServiceDesc.Streams[0], Gossip_Stream_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	return out, nil
+	x := &grpc.GenericClientStream[GossipMessage, GossipACK]{ClientStream: stream}
+	return x, nil
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Gossip_StreamClient = grpc.BidiStreamingClient[GossipMessage, GossipACK]
 
 // GossipServer is the server API for Gossip service.
 // All implementations must embed UnimplementedGossipServer
 // for forward compatibility.
 type GossipServer interface {
-	PutMessageToClient(context.Context, *GossipMessage) (*GossipACK, error)
+	// 双向流式 Gossip
+	Stream(grpc.BidiStreamingServer[GossipMessage, GossipACK]) error
 	mustEmbedUnimplementedGossipServer()
 }
 
@@ -62,8 +67,8 @@ type GossipServer interface {
 // pointer dereference when methods are called.
 type UnimplementedGossipServer struct{}
 
-func (UnimplementedGossipServer) PutMessageToClient(context.Context, *GossipMessage) (*GossipACK, error) {
-	return nil, status.Error(codes.Unimplemented, "method PutMessageToClient not implemented")
+func (UnimplementedGossipServer) Stream(grpc.BidiStreamingServer[GossipMessage, GossipACK]) error {
+	return status.Error(codes.Unimplemented, "method Stream not implemented")
 }
 func (UnimplementedGossipServer) mustEmbedUnimplementedGossipServer() {}
 func (UnimplementedGossipServer) testEmbeddedByValue()                {}
@@ -86,23 +91,12 @@ func RegisterGossipServer(s grpc.ServiceRegistrar, srv GossipServer) {
 	s.RegisterService(&Gossip_ServiceDesc, srv)
 }
 
-func _Gossip_PutMessageToClient_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GossipMessage)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GossipServer).PutMessageToClient(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: Gossip_PutMessageToClient_FullMethodName,
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GossipServer).PutMessageToClient(ctx, req.(*GossipMessage))
-	}
-	return interceptor(ctx, in, info, handler)
+func _Gossip_Stream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GossipServer).Stream(&grpc.GenericServerStream[GossipMessage, GossipACK]{ServerStream: stream})
 }
+
+// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
+type Gossip_StreamServer = grpc.BidiStreamingServer[GossipMessage, GossipACK]
 
 // Gossip_ServiceDesc is the grpc.ServiceDesc for Gossip service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -110,12 +104,14 @@ func _Gossip_PutMessageToClient_Handler(srv interface{}, ctx context.Context, de
 var Gossip_ServiceDesc = grpc.ServiceDesc{
 	ServiceName: "gossip_rpc.Gossip",
 	HandlerType: (*GossipServer)(nil),
-	Methods: []grpc.MethodDesc{
+	Methods:     []grpc.MethodDesc{},
+	Streams: []grpc.StreamDesc{
 		{
-			MethodName: "PutMessageToClient",
-			Handler:    _Gossip_PutMessageToClient_Handler,
+			StreamName:    "Stream",
+			Handler:       _Gossip_Stream_Handler,
+			ServerStreams: true,
+			ClientStreams: true,
 		},
 	},
-	Streams:  []grpc.StreamDesc{},
 	Metadata: "proto/gossip_rpc.proto",
 }

@@ -1,0 +1,5 @@
+[Gossip-Logger]|		2025/12/08 14:40:36.942287		|		 [INFO] Sent msg msg-json-01 to node2
+[Gossip-Logger]|		2025/12/08 14:40:37.444325		|		 msg-json-01 收到的节点: node1
+[Gossip-Logger]|		2025/12/08 14:40:37.446379		|		 msg-json-01 未收到的节点: none
+[Gossip-Logger]|		2025/12/08 14:40:37.447422		|		 msg-text-01 收到的节点: node2
+[Gossip-Logger]|		2025/12/08 14:40:37.448057		|		 msg-text-01 未收到的节点: none

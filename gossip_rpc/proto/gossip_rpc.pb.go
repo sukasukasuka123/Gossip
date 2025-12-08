@@ -145,9 +145,9 @@ const file_proto_gossip_rpc_proto_rawDesc = "" +
 	"\aPayLoad\x18\x03 \x01(\fR\aPayLoad\";\n" +
 	"\tGossipACK\x12\x12\n" +
 	"\x04Hash\x18\x01 \x01(\tR\x04Hash\x12\x1a\n" +
-	"\bFromHash\x18\x02 \x01(\tR\bFromHash2P\n" +
-	"\x06Gossip\x12F\n" +
-	"\x12PutMessageToClient\x12\x19.gossip_rpc.GossipMessage\x1a\x15.gossip_rpc.GossipACKB\x19Z\x17Gossip/proto;gossip_rpcb\x06proto3"
+	"\bFromHash\x18\x02 \x01(\tR\bFromHash2H\n" +
+	"\x06Gossip\x12>\n" +
+	"\x06Stream\x12\x19.gossip_rpc.GossipMessage\x1a\x15.gossip_rpc.GossipACK(\x010\x01B4Z2github.com/sukasukasuka123/Gossip/proto/gossip_rpcb\x06proto3"
 
 var (
 	file_proto_gossip_rpc_proto_rawDescOnce sync.Once
@@ -167,8 +167,8 @@ var file_proto_gossip_rpc_proto_goTypes = []any{
 	(*GossipACK)(nil),     // 1: gossip_rpc.GossipACK
 }
 var file_proto_gossip_rpc_proto_depIdxs = []int32{
-	0, // 0: gossip_rpc.Gossip.PutMessageToClient:input_type -> gossip_rpc.GossipMessage
-	1, // 1: gossip_rpc.Gossip.PutMessageToClient:output_type -> gossip_rpc.GossipACK
+	0, // 0: gossip_rpc.Gossip.Stream:input_type -> gossip_rpc.GossipMessage
+	1, // 1: gossip_rpc.Gossip.Stream:output_type -> gossip_rpc.GossipACK
 	1, // [1:2] is the sub-list for method output_type
 	0, // [0:1] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

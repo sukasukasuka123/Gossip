@@ -1,17 +1,21 @@
 syntax = "proto3";
+
 package gossip_rpc;
-option go_package = "github.com/sukasukasuka123/Gossip/proto;gossip_rpc";
-message GossipMessage{
-    string Hash= 1 ;
-    string FromHash=2;
-    bytes PayLoad=3;
+
+option go_package = "github.com/sukasukasuka123/Gossip/proto/gossip_rpc";
+
+message GossipMessage {
+    string Hash = 1;
+    string FromHash = 2;
+    bytes PayLoad = 3;
 }
 
-message GossipACK{
-    string Hash=1;
-    string FromHash=2;
+message GossipACK {
+    string Hash = 1;
+    string FromHash = 2;
 }
 
-service Gossip{
-    rpc PutMessageToClient(GossipMessage) returns (GossipACK);
+service Gossip {
+    // 双向流式 Gossip
+    rpc Stream(stream GossipMessage) returns (stream GossipACK);
 }
