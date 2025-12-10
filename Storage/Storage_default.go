@@ -7,6 +7,7 @@ import (
 )
 
 // LocalStorage 实现
+// 这里需要总结业务的实现来实现channel的调度
 type LocalStorage struct {
 	states    sync.Map
 	seenCache sync.Map

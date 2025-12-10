@@ -8,7 +8,7 @@ import (
 	"github.com/sukasukasuka123/Gossip/NodeManage"
 	"github.com/sukasukasuka123/Gossip/NodeManage/Logger"
 	"github.com/sukasukasuka123/Gossip/NodeManage/Router"
-	"github.com/sukasukasuka123/Gossip/NodeManage/Storage"
+	"github.com/sukasukasuka123/Gossip/Storage"
 	pb "github.com/sukasukasuka123/Gossip/gossip_rpc/proto"
 )
 

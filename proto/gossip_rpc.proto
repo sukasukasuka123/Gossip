@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package gossip_rpc;
 
+import "google/protobuf/empty.proto";
+
 option go_package = "github.com/sukasukasuka123/Gossip/proto/gossip_rpc";
 
 message GossipMessage {
@@ -16,6 +18,11 @@ message GossipACK {
 }
 
 service Gossip {
-    // 双向流式 Gossip
+    // 解耦模式
+    //客户端向对端推送消息（client-stream）
+    rpc PushMessage(stream GossipMessage) returns (google.protobuf.Empty);
+    // 客户端订阅来自对端的 ACK
+    rpc SubscribeAcks(google.protobuf.Empty) returns (stream GossipACK);
+    //双向流模式
     rpc Stream(stream GossipMessage) returns (stream GossipACK);
 }
