@@ -1,0 +1,217 @@
+[Gossip-Logger]|		2025/12/13 00:44:19.745747		|		 gRPC server listening on :50059
+[Gossip-Logger]|		2025/12/13 00:44:20.316228		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 00:44:20.317879		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.317879		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 00:44:20.317879		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.418882		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 00:44:20.419713		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 00:44:20.420223		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 00:44:20.436412		|		 gRPC server listening on :50059
+[Gossip-Logger]|		2025/12/13 00:44:20.948285		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 00:44:20.949428		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.949428		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.949428		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.949428		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.949428		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.949428		|		 AckStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:20.949957		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.950603		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.950603		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.951234		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.951234		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 00:44:20.951899		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.951899		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.951899		|		 MessageStream recv error from : EOF
+[Gossip-Logger]|		2025/12/13 00:44:20.951899		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:20.952428		|		 MessageStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:21.052393		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 00:44:21.053332		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 00:44:21.053846		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 00:44:21.058847		|		 gRPC server listening on :50059
+[Gossip-Logger]|		2025/12/13 00:44:21.583904		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 00:44:21.585179		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.587031		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.587031		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.587031		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.587031		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.588079		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.589773		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.591560		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.592278		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.595993		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 00:44:21.595993		|		 MessageStream recv error from : EOF
+[Gossip-Logger]|		2025/12/13 00:44:21.597087		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.597618		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.597618		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.601251		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.603089		|		 MessageStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:21.603089		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.603611		|		 AckStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:21.607775		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.609436		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.609976		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.609976		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:21.701701		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 00:44:21.701701		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 00:44:21.703302		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 00:44:21.723808		|		 gRPC server listening on :50059
+[Gossip-Logger]|		2025/12/13 00:44:22.243491		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 00:44:22.244491		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.246817		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.246817		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.246817		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.247454		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.246817		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.247454		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.248462		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.248462		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.249462		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.250463		|		 MessageStream recv error from : EOF
+[Gossip-Logger]|		2025/12/13 00:44:22.251495		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.250463		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.260022		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 00:44:22.260022		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.260022		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.262467		|		 MessageStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:22.262467		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.263856		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.263856		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.264740		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.264740		|		 AckStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:22.363757		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 00:44:22.364768		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 00:44:22.365767		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 00:44:22.401658		|		 gRPC server listening on :50059
+[Gossip-Logger]|		2025/12/13 00:44:22.915187		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 00:44:22.915936		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.916453		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.916961		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.917487		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.918209		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.918209		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.920778		|		 MessageStream recv error from : EOF
+[Gossip-Logger]|		2025/12/13 00:44:22.920778		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.921285		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.922055		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 00:44:22.922408		|		 MessageStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:22.922408		|		 AckStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:22.922912		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.922912		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.923426		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.924042		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.924042		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.924042		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.924658		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.924658		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.925262		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:22.924658		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.022219		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 00:44:23.022219		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 00:44:23.023225		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 00:44:23.046636		|		 gRPC server listening on :50059
+[Gossip-Logger]|		2025/12/13 00:44:23.584698		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 00:44:23.591457		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.592944		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.592944		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.594292		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.594292		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.594292		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.594292		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.595300		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.595300		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.595300		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.595300		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.595300		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.595300		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.595300		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.596710		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.596710		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.596710		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.610985		|		 MessageStream recv error from : EOF
+[Gossip-Logger]|		2025/12/13 00:44:23.618379		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:23.618379		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 00:44:23.618379		|		 MessageStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:23.618379		|		 AckStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:23.719298		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 00:44:23.720306		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 00:44:23.720306		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 00:44:23.723128		|		 gRPC server listening on :50059
+[Gossip-Logger]|		2025/12/13 00:44:24.464585		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 00:44:24.466090		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.467097		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.467097		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.467097		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.467097		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.468097		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.470098		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.470098		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.470098		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.470098		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.471100		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.471100		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.471100		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.471100		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.472097		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.472097		|		 MessageStream recv error from : EOF
+[Gossip-Logger]|		2025/12/13 00:44:24.472097		|		 MessageStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:24.472097		|		 AckStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:24.473098		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.474097		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 00:44:24.482695		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.482695		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:24.574551		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 00:44:24.574551		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 00:44:24.577290		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 00:44:24.805499		|		 gRPC server listening on :50059
+[Gossip-Logger]|		2025/12/13 00:44:25.813267		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 00:44:25.815165		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.816174		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.816174		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.826308		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.827305		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.827305		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.827305		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.827305		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.828304		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.828304		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.828304		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.828304		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.828304		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.829303		|		 AckStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:25.829303		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.829303		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.830303		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.830303		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.830303		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.830303		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:25.832303		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 00:44:25.936481		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 00:44:25.937481		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 00:44:25.937481		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 00:44:26.053661		|		 gRPC server listening on :50059
+[Gossip-Logger]|		2025/12/13 00:44:28.491749		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 00:44:28.493756		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.493756		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.493756		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.494901		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.494901		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.494901		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.495910		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.495910		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.495910		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.496910		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.496910		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.497474		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.497474		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.497474		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.511129		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.511948		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.512454		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.513667		|		 AckStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:28.531457		|		 MessageStream recv error from : EOF
+[Gossip-Logger]|		2025/12/13 00:44:28.531457		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 00:44:28.535137		|		 MessageStream closed by 
+[Gossip-Logger]|		2025/12/13 00:44:28.696859		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 00:44:28.897059		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 00:44:28.897059		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 00:44:28.897564		|		 DoubleStreamNode fully stopped.

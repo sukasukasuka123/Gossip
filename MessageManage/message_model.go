@@ -12,17 +12,28 @@ type GossipMessage[T any] struct {
 	Payload  T      `json:"payload"`
 }
 
-type GossipAck struct {
-	Hash     string `json:"hash"`      // ACK 对应的消息哈希值
-	FromHash string `json:"from_hash"` // ACK 来自哪个节点
-}
-
 // MessageManager 是消息管理器
 type MessageManager struct {
-	MesSendChan chan *pb.GossipMessage
-	MesRecvChan chan *pb.GossipMessage
-	AckSendChan chan *pb.GossipACK
-	AckRecvChan chan *pb.GossipACK
+	MesSendChan  chan *pb.GossipMessage
+	MesRecvChan  chan *pb.GossipMessage
+	AckSendChan  chan *pb.GossipACK
+	AckRecvChan  chan *pb.GossipACK
+	CompleteChan chan string // 用于通知消息已完成 (Hash)
+	SM           *sm.StorageManage
+	NodeHash     string
+}
 
-	Storage *sm.StorageManage
+// NewMessageManager 创建 MessageManager 实例
+func NewMessageManager(nodeHash string, smgr *sm.StorageManage) *MessageManager {
+	MM := &MessageManager{
+		MesSendChan:  make(chan *pb.GossipMessage, 100),
+		MesRecvChan:  make(chan *pb.GossipMessage, 100),
+		AckSendChan:  make(chan *pb.GossipACK, 100),
+		AckRecvChan:  make(chan *pb.GossipACK, 100),
+		CompleteChan: make(chan string, 100),
+		SM:           smgr,
+		NodeHash:     nodeHash,
+	}
+	go MM.MessageManageLoop()
+	return MM
 }

@@ -19,10 +19,9 @@ message GossipACK {
 
 service Gossip {
     // 解耦模式
-    //客户端向对端推送消息（client-stream）
-    rpc PushMessage(stream GossipMessage) returns (google.protobuf.Empty);
-    // 客户端订阅来自对端的 ACK
-    rpc SubscribeAcks(google.protobuf.Empty) returns (stream GossipACK);
+    rpc MessageStream(stream GossipMessage) returns (stream GossipMessage);
+    rpc AckStream(stream GossipACK) returns (stream GossipACK);
+
     //双向流模式
     rpc Stream(stream GossipMessage) returns (stream GossipACK);
 }

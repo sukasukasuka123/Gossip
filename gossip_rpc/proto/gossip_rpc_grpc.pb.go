@@ -11,7 +11,6 @@ import (
 	grpc "google.golang.org/grpc"
 	codes "google.golang.org/grpc/codes"
 	status "google.golang.org/grpc/status"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
 )
 
 // This is a compile-time assertion to ensure that this generated file
@@ -20,8 +19,8 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	Gossip_PushMessage_FullMethodName   = "/gossip_rpc.Gossip/PushMessage"
-	Gossip_SubscribeAcks_FullMethodName = "/gossip_rpc.Gossip/SubscribeAcks"
+	Gossip_MessageStream_FullMethodName = "/gossip_rpc.Gossip/MessageStream"
+	Gossip_AckStream_FullMethodName     = "/gossip_rpc.Gossip/AckStream"
 	Gossip_Stream_FullMethodName        = "/gossip_rpc.Gossip/Stream"
 )
 
@@ -30,10 +29,8 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GossipClient interface {
 	// 解耦模式
-	// 客户端向对端推送消息（client-stream）
-	PushMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[GossipMessage, emptypb.Empty], error)
-	// 客户端订阅来自对端的 ACK
-	SubscribeAcks(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GossipACK], error)
+	MessageStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipMessage, GossipMessage], error)
+	AckStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipACK, GossipACK], error)
 	// 双向流模式
 	Stream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipMessage, GossipACK], error)
 }
@@ -46,37 +43,31 @@ func NewGossipClient(cc grpc.ClientConnInterface) GossipClient {
 	return &gossipClient{cc}
 }
 
-func (c *gossipClient) PushMessage(ctx context.Context, opts ...grpc.CallOption) (grpc.ClientStreamingClient[GossipMessage, emptypb.Empty], error) {
+func (c *gossipClient) MessageStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipMessage, GossipMessage], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &Gossip_ServiceDesc.Streams[0], Gossip_PushMessage_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Gossip_ServiceDesc.Streams[0], Gossip_MessageStream_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[GossipMessage, emptypb.Empty]{ClientStream: stream}
+	x := &grpc.GenericClientStream[GossipMessage, GossipMessage]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Gossip_PushMessageClient = grpc.ClientStreamingClient[GossipMessage, emptypb.Empty]
+type Gossip_MessageStreamClient = grpc.BidiStreamingClient[GossipMessage, GossipMessage]
 
-func (c *gossipClient) SubscribeAcks(ctx context.Context, in *emptypb.Empty, opts ...grpc.CallOption) (grpc.ServerStreamingClient[GossipACK], error) {
+func (c *gossipClient) AckStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipACK, GossipACK], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &Gossip_ServiceDesc.Streams[1], Gossip_SubscribeAcks_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &Gossip_ServiceDesc.Streams[1], Gossip_AckStream_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[emptypb.Empty, GossipACK]{ClientStream: stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
+	x := &grpc.GenericClientStream[GossipACK, GossipACK]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Gossip_SubscribeAcksClient = grpc.ServerStreamingClient[GossipACK]
+type Gossip_AckStreamClient = grpc.BidiStreamingClient[GossipACK, GossipACK]
 
 func (c *gossipClient) Stream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipMessage, GossipACK], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
@@ -96,10 +87,8 @@ type Gossip_StreamClient = grpc.BidiStreamingClient[GossipMessage, GossipACK]
 // for forward compatibility.
 type GossipServer interface {
 	// 解耦模式
-	// 客户端向对端推送消息（client-stream）
-	PushMessage(grpc.ClientStreamingServer[GossipMessage, emptypb.Empty]) error
-	// 客户端订阅来自对端的 ACK
-	SubscribeAcks(*emptypb.Empty, grpc.ServerStreamingServer[GossipACK]) error
+	MessageStream(grpc.BidiStreamingServer[GossipMessage, GossipMessage]) error
+	AckStream(grpc.BidiStreamingServer[GossipACK, GossipACK]) error
 	// 双向流模式
 	Stream(grpc.BidiStreamingServer[GossipMessage, GossipACK]) error
 	mustEmbedUnimplementedGossipServer()
@@ -112,11 +101,11 @@ type GossipServer interface {
 // pointer dereference when methods are called.
 type UnimplementedGossipServer struct{}
 
-func (UnimplementedGossipServer) PushMessage(grpc.ClientStreamingServer[GossipMessage, emptypb.Empty]) error {
-	return status.Error(codes.Unimplemented, "method PushMessage not implemented")
+func (UnimplementedGossipServer) MessageStream(grpc.BidiStreamingServer[GossipMessage, GossipMessage]) error {
+	return status.Error(codes.Unimplemented, "method MessageStream not implemented")
 }
-func (UnimplementedGossipServer) SubscribeAcks(*emptypb.Empty, grpc.ServerStreamingServer[GossipACK]) error {
-	return status.Error(codes.Unimplemented, "method SubscribeAcks not implemented")
+func (UnimplementedGossipServer) AckStream(grpc.BidiStreamingServer[GossipACK, GossipACK]) error {
+	return status.Error(codes.Unimplemented, "method AckStream not implemented")
 }
 func (UnimplementedGossipServer) Stream(grpc.BidiStreamingServer[GossipMessage, GossipACK]) error {
 	return status.Error(codes.Unimplemented, "method Stream not implemented")
@@ -142,23 +131,19 @@ func RegisterGossipServer(s grpc.ServiceRegistrar, srv GossipServer) {
 	s.RegisterService(&Gossip_ServiceDesc, srv)
 }
 
-func _Gossip_PushMessage_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(GossipServer).PushMessage(&grpc.GenericServerStream[GossipMessage, emptypb.Empty]{ServerStream: stream})
+func _Gossip_MessageStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GossipServer).MessageStream(&grpc.GenericServerStream[GossipMessage, GossipMessage]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Gossip_PushMessageServer = grpc.ClientStreamingServer[GossipMessage, emptypb.Empty]
+type Gossip_MessageStreamServer = grpc.BidiStreamingServer[GossipMessage, GossipMessage]
 
-func _Gossip_SubscribeAcks_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(emptypb.Empty)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
-	}
-	return srv.(GossipServer).SubscribeAcks(m, &grpc.GenericServerStream[emptypb.Empty, GossipACK]{ServerStream: stream})
+func _Gossip_AckStream_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GossipServer).AckStream(&grpc.GenericServerStream[GossipACK, GossipACK]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type Gossip_SubscribeAcksServer = grpc.ServerStreamingServer[GossipACK]
+type Gossip_AckStreamServer = grpc.BidiStreamingServer[GossipACK, GossipACK]
 
 func _Gossip_Stream_Handler(srv interface{}, stream grpc.ServerStream) error {
 	return srv.(GossipServer).Stream(&grpc.GenericServerStream[GossipMessage, GossipACK]{ServerStream: stream})
@@ -176,14 +161,16 @@ var Gossip_ServiceDesc = grpc.ServiceDesc{
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "PushMessage",
-			Handler:       _Gossip_PushMessage_Handler,
+			StreamName:    "MessageStream",
+			Handler:       _Gossip_MessageStream_Handler,
+			ServerStreams: true,
 			ClientStreams: true,
 		},
 		{
-			StreamName:    "SubscribeAcks",
-			Handler:       _Gossip_SubscribeAcks_Handler,
+			StreamName:    "AckStream",
+			Handler:       _Gossip_AckStream_Handler,
 			ServerStreams: true,
+			ClientStreams: true,
 		},
 		{
 			StreamName:    "Stream",

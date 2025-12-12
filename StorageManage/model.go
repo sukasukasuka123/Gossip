@@ -7,25 +7,21 @@ import (
 	"github.com/sukasukasuka123/Gossip/Storage"
 )
 
-// StorageRequest 写操作请求
+// StorageRequest 表示所有对存储的操作，统一入口
 type StorageRequest struct {
 	Op      StorageOp
 	Payload Payload
-	Reply   chan interface{} // 用于读操作返回值
+	Reply   chan interface{} // nil 表示不需要返回
 }
 
-// StorageManage 是统一的调度入口
 type StorageManage struct {
-	storage   IStorage
-	writeChan chan StorageRequest
-	readChan  chan StorageRequest
+	storage IStorage
+	reqChan chan StorageRequest // 统一入口
 }
 
-// NewStorageManage 初始化
 func NewStorageManage(custom IStorage) *StorageManage {
 	sm := &StorageManage{
-		writeChan: make(chan StorageRequest, 128),
-		readChan:  make(chan StorageRequest, 128),
+		reqChan: make(chan StorageRequest, 256), // 放宽缓冲区
 	}
 
 	if custom != nil {
@@ -34,93 +30,113 @@ func NewStorageManage(custom IStorage) *StorageManage {
 		sm.storage = Storage.NewLocalStorage(50, 2*time.Minute)
 	}
 
-	// 启动调度协程
 	go sm.loop()
-
 	return sm
 }
 
-// loop 调度协程
 func (sm *StorageManage) loop() {
-	for {
-		select {
-		case req := <-sm.writeChan:
-			sm.handleWrite(req)
-		case req := <-sm.readChan:
-			sm.handleRead(req)
-		}
+	for req := range sm.reqChan {
+		sm.dispatch(req)
 	}
 }
 
-// handleWrite 处理写操作
-func (sm *StorageManage) handleWrite(req StorageRequest) {
-	switch req.Op {
-	case OpInitState:
-		if req.Payload.Neighbors != nil {
-			sm.storage.InitState(req.Payload.Hash, req.Payload.Neighbors)
-		}
-	case OpUpdateState:
-		if req.Payload.NodeHash != "" {
-			sm.storage.UpdateState(req.Payload.Hash, req.Payload.NodeHash)
-		}
-	case OpMarkSent:
-		if req.Payload.NodeHash != "" {
-			sm.storage.MarkSent(req.Payload.Hash, req.Payload.NodeHash)
-		}
-	case OpDeleteState:
-		sm.storage.DeleteState(req.Payload.Hash)
-	}
-	// 写操作无需返回值
-	if req.Reply != nil {
-		req.Reply <- nil
-	}
-}
-
-// handleRead 处理读操作
-func (sm *StorageManage) handleRead(req StorageRequest) {
+func (sm *StorageManage) dispatch(req StorageRequest) {
 	var result interface{}
 	var err error
 
 	switch req.Op {
+
+	case OpInitState:
+		err = sm.handleInit(req.Payload)
+
+	case OpUpdateState:
+		err = sm.handleUpdate(req.Payload)
+
+	case OpMarkSent:
+		err = sm.handleMarkSent(req.Payload)
+
+	case OpDeleteState:
+		err = sm.handleDelete(req.Payload)
+
 	case OpGetState:
-		if req.Payload.NodeHash != "" {
-			result = sm.storage.GetState(req.Payload.Hash, req.Payload.NodeHash)
-		} else {
-			err = errors.New("OpGetState requires NodeHash")
-		}
+		result, err = sm.handleGetState(req.Payload)
+
 	case OpGetAllStates:
-		result = sm.storage.GetStates(req.Payload.Hash)
+		result, err = sm.handleGetAllStates(req.Payload)
+
 	default:
-		err = errors.New("unknown read operation")
+		err = errors.New("unknown op")
 	}
 
 	if req.Reply != nil {
 		if err != nil {
 			req.Reply <- err
-		} else {
-			req.Reply <- result
+			return
 		}
+		req.Reply <- result
 	}
 }
 
-// 公共接口：调度写操作
-func (sm *StorageManage) ScheduleWrite(op StorageOp, payload Payload) {
-	sm.writeChan <- StorageRequest{
+// ===== 下面是每个操作的具体函数 =====
+
+func (sm *StorageManage) handleInit(p Payload) error {
+	if p.Neighbors == nil {
+		return errors.New("InitState requires Neighbors")
+	}
+	_, err := sm.storage.InitState(p.Hash, p.Neighbors)
+	return err
+}
+
+func (sm *StorageManage) handleUpdate(p Payload) error {
+	if p.NodeHash == "" {
+		return errors.New("UpdateState requires NodeHash")
+	}
+	return sm.storage.UpdateState(p.Hash, p.NodeHash)
+}
+
+func (sm *StorageManage) handleMarkSent(p Payload) error {
+	if p.NodeHash == "" {
+		return errors.New("MarkSent requires NodeHash")
+	}
+	sm.storage.MarkSent(p.Hash, p.NodeHash)
+	return nil
+}
+
+func (sm *StorageManage) handleDelete(p Payload) error {
+	sm.storage.DeleteState(p.Hash)
+	return nil
+}
+
+func (sm *StorageManage) handleGetState(p Payload) (interface{}, error) {
+	if p.NodeHash == "" {
+		return nil, errors.New("GetState requires NodeHash")
+	}
+	return sm.storage.GetState(p.Hash, p.NodeHash), nil
+}
+
+func (sm *StorageManage) handleGetAllStates(p Payload) (interface{}, error) {
+	return sm.storage.GetStates(p.Hash), nil
+}
+
+// ===== 公共接口（上层调用这些）=====
+
+// 异步操作（不需要返回）
+func (sm *StorageManage) Schedule(op StorageOp, payload Payload) {
+	sm.reqChan <- StorageRequest{
 		Op:      op,
 		Payload: payload,
 		Reply:   nil,
 	}
 }
 
-// 公共接口：调度读操作并等待返回
-func (sm *StorageManage) ScheduleRead(op StorageOp, payload Payload) (interface{}, error) {
+// 同步操作（需要返回）
+func (sm *StorageManage) ScheduleSync(op StorageOp, payload Payload) (interface{}, error) {
 	reply := make(chan interface{}, 1)
-	sm.readChan <- StorageRequest{
+	sm.reqChan <- StorageRequest{
 		Op:      op,
 		Payload: payload,
 		Reply:   reply,
 	}
-
 	res := <-reply
 	if err, ok := res.(error); ok {
 		return nil, err

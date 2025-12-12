@@ -9,7 +9,7 @@ package gossip_rpc
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	emptypb "google.golang.org/protobuf/types/known/emptypb"
+	_ "google.golang.org/protobuf/types/known/emptypb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -146,10 +146,10 @@ const file_proto_gossip_rpc_proto_rawDesc = "" +
 	"\aPayLoad\x18\x03 \x01(\fR\aPayLoad\";\n" +
 	"\tGossipACK\x12\x12\n" +
 	"\x04Hash\x18\x01 \x01(\tR\x04Hash\x12\x1a\n" +
-	"\bFromHash\x18\x02 \x01(\tR\bFromHash2\xce\x01\n" +
-	"\x06Gossip\x12B\n" +
-	"\vPushMessage\x12\x19.gossip_rpc.GossipMessage\x1a\x16.google.protobuf.Empty(\x01\x12@\n" +
-	"\rSubscribeAcks\x12\x16.google.protobuf.Empty\x1a\x15.gossip_rpc.GossipACK0\x01\x12>\n" +
+	"\bFromHash\x18\x02 \x01(\tR\bFromHash2\xd2\x01\n" +
+	"\x06Gossip\x12I\n" +
+	"\rMessageStream\x12\x19.gossip_rpc.GossipMessage\x1a\x19.gossip_rpc.GossipMessage(\x010\x01\x12=\n" +
+	"\tAckStream\x12\x15.gossip_rpc.GossipACK\x1a\x15.gossip_rpc.GossipACK(\x010\x01\x12>\n" +
 	"\x06Stream\x12\x19.gossip_rpc.GossipMessage\x1a\x15.gossip_rpc.GossipACK(\x010\x01B4Z2github.com/sukasukasuka123/Gossip/proto/gossip_rpcb\x06proto3"
 
 var (
@@ -168,14 +168,13 @@ var file_proto_gossip_rpc_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
 var file_proto_gossip_rpc_proto_goTypes = []any{
 	(*GossipMessage)(nil), // 0: gossip_rpc.GossipMessage
 	(*GossipACK)(nil),     // 1: gossip_rpc.GossipACK
-	(*emptypb.Empty)(nil), // 2: google.protobuf.Empty
 }
 var file_proto_gossip_rpc_proto_depIdxs = []int32{
-	0, // 0: gossip_rpc.Gossip.PushMessage:input_type -> gossip_rpc.GossipMessage
-	2, // 1: gossip_rpc.Gossip.SubscribeAcks:input_type -> google.protobuf.Empty
+	0, // 0: gossip_rpc.Gossip.MessageStream:input_type -> gossip_rpc.GossipMessage
+	1, // 1: gossip_rpc.Gossip.AckStream:input_type -> gossip_rpc.GossipACK
 	0, // 2: gossip_rpc.Gossip.Stream:input_type -> gossip_rpc.GossipMessage
-	2, // 3: gossip_rpc.Gossip.PushMessage:output_type -> google.protobuf.Empty
-	1, // 4: gossip_rpc.Gossip.SubscribeAcks:output_type -> gossip_rpc.GossipACK
+	0, // 3: gossip_rpc.Gossip.MessageStream:output_type -> gossip_rpc.GossipMessage
+	1, // 4: gossip_rpc.Gossip.AckStream:output_type -> gossip_rpc.GossipACK
 	1, // 5: gossip_rpc.Gossip.Stream:output_type -> gossip_rpc.GossipACK
 	3, // [3:6] is the sub-list for method output_type
 	0, // [0:3] is the sub-list for method input_type
