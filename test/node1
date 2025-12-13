@@ -1,285 +1,144 @@
-[Gossip-Logger]|		2025/12/12 23:11:57.453924		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:11:58.030256		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:11:58.537671		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:12:37.453434		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:12:37.453434		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:12:37.453955		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:12:37.555702		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:12:37.656728		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:18:20.478072		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:18:21.044746		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:19:00.478370		|		 AckStream closed by 
-[Gossip-Logger]|		2025/12/12 23:19:00.478370		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:19:00.479978		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:19:00.582913		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:19:00.683732		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:28:06.143223		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:28:06.699196		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:28:07.204996		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:28:46.141276		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:28:46.141276		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:28:46.142470		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:28:46.244340		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:28:46.344535		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:32:19.423875		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:32:19.989816		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:32:20.498014		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:32:59.422710		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:32:59.422710		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:32:59.422710		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:32:59.555961		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:32:59.660991		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:35:38.916900		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:35:39.484819		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:35:39.991619		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:36:18.915885		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:36:18.915885		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:36:18.916408		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:36:19.021546		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:36:19.128004		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:39:34.733891		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:39:35.300795		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:39:35.806753		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:40:14.734276		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:40:14.734276		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:40:14.735554		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:40:14.837443		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:40:14.938490		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:43:45.399645		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:43:45.943761		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:43:46.451597		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:44:25.398277		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:44:25.398277		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:44:25.399352		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:44:25.505109		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:44:25.606810		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:47:16.725286		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:47:17.273026		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:47:17.779660		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:47:56.725043		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:47:56.727246		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:47:56.727900		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:47:56.845760		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:47:56.947338		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:48:35.535903		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:48:36.093154		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:48:36.599875		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:49:15.534441		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:49:15.534441		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:49:15.534979		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:49:15.636778		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:49:15.737808		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:51:16.477923		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:51:17.047374		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:51:17.554568		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:51:56.476856		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:51:56.484816		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:51:56.485475		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:51:56.588104		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:51:56.688816		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:51:56.691911		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:51:57.205033		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:51:57.707680		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:52:36.691807		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:52:36.692814		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:52:36.693815		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:52:36.798110		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:52:36.899038		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:52:36.902355		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:52:37.424623		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:52:37.943416		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:53:16.906242		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:53:16.906242		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:53:16.907810		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:53:17.011007		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:53:17.112374		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:53:52.370606		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:53:52.930384		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:53:53.439750		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:54:32.373482		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:54:32.374952		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:54:32.374105		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:54:32.475260		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:54:32.576214		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:54:32.577885		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:54:33.091162		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:54:33.607176		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:55:12.583676		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:55:12.583676		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:55:12.587387		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:55:12.687149		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:55:12.788457		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:55:12.792529		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:55:13.318626		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:55:13.824422		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:56:02.795198		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:56:02.797051		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:56:02.798423		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:56:02.905313		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:56:03.006699		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:56:03.037112		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:56:03.562685		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:56:04.069713		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:58:32.876163		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:58:33.437591		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:58:34.443961		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:59:12.875408		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:59:12.875989		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:59:12.876527		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:59:12.977961		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:59:13.137522		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:59:13.139683		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:59:13.653025		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:59:14.659002		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/12 23:59:53.140099		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/12 23:59:53.140099		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/12 23:59:53.141258		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/12 23:59:53.242011		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/12 23:59:53.343123		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/12 23:59:53.345612		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/12 23:59:53.874658		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/12 23:59:54.878443		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:00:33.346273		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/13 00:00:33.346273		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/13 00:00:33.356099		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/13 00:00:33.458556		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/13 00:00:33.559547		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/13 00:02:29.764060		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:02:30.317600		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:03:09.762893		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/13 00:03:09.762893		|		 AckStream closed by 
-[Gossip-Logger]|		2025/12/13 00:03:09.763475		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/13 00:03:09.865955		|		 gRPC server stopped
-[Gossip-Logger]|		2025/12/13 00:03:09.966353		|		 DoubleStreamNode stopped
-[Gossip-Logger]|		2025/12/13 00:11:24.616361		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:11:25.173658		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:11:25.681357		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:17:03.373926		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:17:03.955666		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:17:04.464450		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:21:38.577584		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:21:39.124654		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:21:39.632557		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:30:28.595485		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:30:29.178505		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:30:29.688111		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:30:29.688414		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:30:29.791671		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:30:29.791671		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:30:29.892696		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:30:29.893202		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:30:29.897139		|		 DoubleStreamNode fully stopped.
-[Gossip-Logger]|		2025/12/13 00:30:29.904394		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:30:30.408524		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:30:30.914089		|		 MessageStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:30:30.914089		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:30:30.914621		|		 AckStream recv error from node2: rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:30:31.028266		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:30:31.029275		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:30:31.131847		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:30:31.138124		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:30:31.138124		|		 DoubleStreamNode fully stopped.
-[Gossip-Logger]|		2025/12/13 00:30:31.217497		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:30:31.719742		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:30:32.223841		|		 MessageStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:30:32.226987		|		 Failed to send ACK to node2: rpc error: code = Internal desc = SendMsg called after CloseSend
-[Gossip-Logger]|		2025/12/13 00:30:32.436605		|		 MessageStream recv error from node2: rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:30:32.465787		|		 AckStream closed by 
-[Gossip-Logger]|		2025/12/13 00:30:32.493672		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:30:32.493672		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:30:32.594759		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:30:32.595563		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:30:32.595563		|		 DoubleStreamNode fully stopped.
-[Gossip-Logger]|		2025/12/13 00:30:32.599522		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:30:33.102453		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:30:33.859395		|		 MessageStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:30:33.859899		|		 Failed to send ACK to node2: rpc error: code = Internal desc = SendMsg called after CloseSend
-[Gossip-Logger]|		2025/12/13 00:30:33.859899		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:30:33.969075		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:30:33.969075		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:30:34.069535		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:30:34.070541		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:30:34.071540		|		 DoubleStreamNode fully stopped.
-[Gossip-Logger]|		2025/12/13 00:30:34.104411		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:30:34.725880		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:30:35.352750		|		 MessageStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:30:35.415086		|		 Failed to send ACK to node2: rpc error: code = Internal desc = SendMsg called after CloseSend
-[Gossip-Logger]|		2025/12/13 00:30:35.415086		|		 MessageStream recv error from node2: EOF
-[Gossip-Logger]|		2025/12/13 00:30:35.416093		|		 MessageStream closed by node2
-[Gossip-Logger]|		2025/12/13 00:30:35.416093		|		 AckStream closed by 
-[Gossip-Logger]|		2025/12/13 00:30:35.632154		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:30:35.632661		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:30:35.783931		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:30:35.810849		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:30:35.811849		|		 DoubleStreamNode fully stopped.
-[Gossip-Logger]|		2025/12/13 00:30:36.070446		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:30:36.738653		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:30:37.544892		|		 MessageStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:30:38.250018		|		 AckStream closed by 
-[Gossip-Logger]|		2025/12/13 00:30:38.495812		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:30:38.496812		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:30:38.692875		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:30:38.693879		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:30:38.693879		|		 DoubleStreamNode fully stopped.
-[Gossip-Logger]|		2025/12/13 00:35:51.401342		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:35:51.950443		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:35:52.456921		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:36:02.456592		|		 AckStream recv error from node2: rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:36:02.457129		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:36:02.561044		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:36:02.561044		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:36:02.661737		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:36:02.662242		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:36:02.662242		|		 DoubleStreamNode fully stopped.
-[Gossip-Logger]|		2025/12/13 00:39:02.782387		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:39:03.335056		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:39:03.840477		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:39:13.841951		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:39:13.841951		|		 AckStream recv error from node2: rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:39:13.967579		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:39:13.968580		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:39:14.074523		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:39:14.075524		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:39:14.076522		|		 DoubleStreamNode fully stopped.
-[Gossip-Logger]|		2025/12/13 00:40:29.270197		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:40:29.849117		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:40:30.360201		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:40:40.363042		|		 AckStream recv error from node2: rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:40:40.363042		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:40:40.466948		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:40:40.466948		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:40:40.613752		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:40:40.687644		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:40:40.688644		|		 DoubleStreamNode fully stopped.
-[Gossip-Logger]|		2025/12/13 00:43:05.946164		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:43:06.597416		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:43:07.643954		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:43:07.646298		|		 AckStream recv error from node2: rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:43:07.646298		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/13 00:43:07.646854		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/13 00:43:07.747644		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:43:07.748418		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:43:07.860523		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:43:07.879548		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:43:07.904995		|		 DoubleStreamNode fully stopped.
-[Gossip-Logger]|		2025/12/13 00:43:07.907048		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:43:08.410198		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:43:09.413720		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:43:09.480823		|		 AckStream recv error from node2: rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:43:09.480823		|		 MessageStream recv error from : EOF
-[Gossip-Logger]|		2025/12/13 00:43:09.480823		|		 MessageStream closed by 
-[Gossip-Logger]|		2025/12/13 00:43:09.581570		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:43:09.582552		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:43:09.689343		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:43:09.689343		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:43:09.690344		|		 DoubleStreamNode fully stopped.
-[Gossip-Logger]|		2025/12/13 00:43:09.707697		|		 gRPC server listening on :50051
-[Gossip-Logger]|		2025/12/13 00:43:10.211152		|		 Successfully connected to node2
-[Gossip-Logger]|		2025/12/13 00:43:11.215659		|		 AckStream connected from node2
-[Gossip-Logger]|		2025/12/13 00:43:12.978931		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
-[Gossip-Logger]|		2025/12/13 00:43:12.980939		|		 AckStream closed by node2
-[Gossip-Logger]|		2025/12/13 00:43:13.098111		|		 Stop signal sent.
-[Gossip-Logger]|		2025/12/13 00:43:13.099109		|		 All client streams closed.
-[Gossip-Logger]|		2025/12/13 00:43:13.207429		|		 gRPC server GracefulStop done.
-[Gossip-Logger]|		2025/12/13 00:43:13.209433		|		 MessageManager channels closed.
-[Gossip-Logger]|		2025/12/13 00:43:13.210162		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:19:48.325090		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:19:48.897916		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:19:49.408632		|		 AckStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:21:08.710358		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:21:09.290802		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:21:09.802521		|		 AckStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:21:29.169971		|		 AckStream recv error from node2: rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:21:29.169971		|		 MessageStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:21:29.278116		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:21:29.278644		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:21:29.384043		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:21:29.384883		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:21:29.385391		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:28:35.419607		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:28:36.095999		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:28:36.622977		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:28:36.622977		|		 MessageStream recv error from : EOF
+[Gossip-Logger]|		2025/12/13 04:28:36.623992		|		 MessageStream closed by 
+[Gossip-Logger]|		2025/12/13 04:28:36.729199		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:28:36.729707		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:28:36.846788		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:28:36.846788		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:28:36.848297		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:28:37.057416		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:28:37.572345		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:28:38.111170		|		 MessageStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:28:38.238683		|		 MessageStream recv error from node2: EOF
+[Gossip-Logger]|		2025/12/13 04:28:38.238683		|		 MessageStream closed by node2
+[Gossip-Logger]|		2025/12/13 04:28:38.239682		|		 AckStream closed by 
+[Gossip-Logger]|		2025/12/13 04:28:38.346624		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:28:38.347997		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:28:38.455216		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:28:38.455216		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:28:38.456214		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:28:38.660483		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:28:39.170631		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:28:39.712732		|		 MessageStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:28:39.784723		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:28:39.794254		|		 MessageStream recv error from node2: EOF
+[Gossip-Logger]|		2025/12/13 04:28:39.829941		|		 MessageStream closed by node2
+[Gossip-Logger]|		2025/12/13 04:28:39.911061		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:28:39.911061		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:28:40.038873		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:28:40.059779		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:28:40.059779		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:28:40.548979		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:28:41.069241		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:28:41.673426		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:28:41.674437		|		 MessageStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:28:41.691183		|		 MessageStream recv error from node2: rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:28:41.797807		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:28:41.797807		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:28:41.899780		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:28:41.899780		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:28:41.899780		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:28:42.057643		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:28:43.099567		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:28:43.886816		|		 AckStream closed by 
+[Gossip-Logger]|		2025/12/13 04:28:43.886816		|		 MessageStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:28:43.886816		|		 MessageStream recv error from node2: rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:28:44.262106		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:28:44.275539		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:28:44.446736		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:28:44.447738		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:28:44.448243		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:28:45.223425		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:28:46.052334		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:28:47.169027		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:28:47.169027		|		 MessageStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:28:47.655901		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:28:47.655901		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:28:47.796172		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:28:47.797176		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:28:47.797176		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:28:49.048438		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:28:49.857030		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:28:50.845512		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:28:50.845512		|		 MessageStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:28:51.458275		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:28:51.458275		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:28:51.875797		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:28:51.875797		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:28:51.875797		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:31:53.866384		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:31:54.442264		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:31:54.951498		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:31:54.953005		|		 MessageStream recv error from : EOF
+[Gossip-Logger]|		2025/12/13 04:31:54.953848		|		 MessageStream closed by 
+[Gossip-Logger]|		2025/12/13 04:31:55.054806		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:31:55.055317		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:31:55.156151		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:31:55.156827		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:31:55.156827		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:31:55.212113		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:31:55.731310		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:31:56.235836		|		 MessageStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:31:56.236845		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:31:56.237916		|		 MessageStream recv error from node2: rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:31:56.345542		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:31:56.345542		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:31:56.448289		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:31:56.448289		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:31:56.448289		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:31:56.453770		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:31:56.956809		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:31:57.461947		|		 MessageStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:31:57.464810		|		 MessageStream recv error from node2: EOF
+[Gossip-Logger]|		2025/12/13 04:31:57.481652		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:31:57.482160		|		 MessageStream closed by node2
+[Gossip-Logger]|		2025/12/13 04:31:57.563214		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:31:57.564210		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:31:57.664960		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:31:57.665466		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:31:57.666079		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:31:57.789920		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:31:58.293863		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:31:58.816770		|		 MessageStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:31:59.176337		|		 MessageStream recv error from node2: rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:31:59.223561		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:31:59.327509		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:31:59.327509		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:31:59.429332		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:31:59.429838		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:31:59.429838		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:31:59.464021		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:32:00.136516		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:32:00.952773		|		 AckStream recv error from : rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:32:00.952773		|		 MessageStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:32:01.606422		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:32:01.606422		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:32:01.825072		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:32:01.825072		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:32:01.825072		|		 DoubleStreamNode fully stopped.
+[Gossip-Logger]|		2025/12/13 04:37:50.752127		|		 gRPC server listening on :50051
+[Gossip-Logger]|		2025/12/13 04:37:51.330722		|		 Successfully connected to node2
+[Gossip-Logger]|		2025/12/13 04:37:51.839411		|		 AckStream connected from node2
+[Gossip-Logger]|		2025/12/13 04:38:04.754859		|		 AckStream recv error from node2: rpc error: code = Canceled desc = context canceled
+[Gossip-Logger]|		2025/12/13 04:38:04.754859		|		 MessageStream recv error from : EOF
+[Gossip-Logger]|		2025/12/13 04:38:04.754859		|		 MessageStream closed by 
+[Gossip-Logger]|		2025/12/13 04:38:04.872752		|		 Stop signal sent.
+[Gossip-Logger]|		2025/12/13 04:38:04.873756		|		 All client streams closed.
+[Gossip-Logger]|		2025/12/13 04:38:04.974516		|		 gRPC server GracefulStop done.
+[Gossip-Logger]|		2025/12/13 04:38:04.975046		|		 MessageManager channels closed.
+[Gossip-Logger]|		2025/12/13 04:38:04.975573		|		 DoubleStreamNode fully stopped.

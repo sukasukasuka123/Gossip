@@ -15,7 +15,7 @@ type StorageRequest struct {
 }
 
 type StorageManage struct {
-	storage IStorage
+	Storage IStorage
 	reqChan chan StorageRequest // 统一入口
 }
 
@@ -25,9 +25,9 @@ func NewStorageManage(custom IStorage) *StorageManage {
 	}
 
 	if custom != nil {
-		sm.storage = custom
+		sm.Storage = custom
 	} else {
-		sm.storage = Storage.NewLocalStorage(50, 2*time.Minute)
+		sm.Storage = Storage.NewLocalStorage(50, 2*time.Minute)
 	}
 
 	go sm.loop()
@@ -83,7 +83,7 @@ func (sm *StorageManage) handleInit(p Payload) error {
 	if p.Neighbors == nil {
 		return errors.New("InitState requires Neighbors")
 	}
-	_, err := sm.storage.InitState(p.Hash, p.Neighbors)
+	_, err := sm.Storage.InitState(p.Hash, p.Neighbors)
 	return err
 }
 
@@ -91,19 +91,19 @@ func (sm *StorageManage) handleUpdate(p Payload) error {
 	if p.NodeHash == "" {
 		return errors.New("UpdateState requires NodeHash")
 	}
-	return sm.storage.UpdateState(p.Hash, p.NodeHash)
+	return sm.Storage.UpdateState(p.Hash, p.NodeHash)
 }
 
 func (sm *StorageManage) handleMarkSent(p Payload) error {
 	if p.NodeHash == "" {
 		return errors.New("MarkSent requires NodeHash")
 	}
-	sm.storage.MarkSent(p.Hash, p.NodeHash)
+	sm.Storage.MarkSent(p.Hash, p.NodeHash)
 	return nil
 }
 
 func (sm *StorageManage) handleDelete(p Payload) error {
-	sm.storage.DeleteState(p.Hash)
+	sm.Storage.DeleteState(p.Hash)
 	return nil
 }
 
@@ -111,11 +111,11 @@ func (sm *StorageManage) handleGetState(p Payload) (interface{}, error) {
 	if p.NodeHash == "" {
 		return nil, errors.New("GetState requires NodeHash")
 	}
-	return sm.storage.GetState(p.Hash, p.NodeHash), nil
+	return sm.Storage.GetState(p.Hash, p.NodeHash), nil
 }
 
 func (sm *StorageManage) handleGetAllStates(p Payload) (interface{}, error) {
-	return sm.storage.GetStates(p.Hash), nil
+	return sm.Storage.GetStates(p.Hash), nil
 }
 
 // ===== 公共接口（上层调用这些）=====

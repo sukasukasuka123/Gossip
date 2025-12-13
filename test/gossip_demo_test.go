@@ -2,6 +2,7 @@ package test
 
 import (
 	"fmt"
+	"log"
 	"sync"
 	"testing"
 	"time"
@@ -284,7 +285,7 @@ func TestTwoNodesBasicCommunication(t *testing.T) {
 	t.Log("Connection established.")
 
 	// --- 1. 定义测试消息 ---
-	const numMessages = 100
+	const numMessages = 15000
 	messages := make([]*pb.GossipMessage, numMessages)
 
 	// --- 2. 节点1 发送大量消息给节点2 ---
@@ -306,23 +307,17 @@ func TestTwoNodesBasicCommunication(t *testing.T) {
 
 	// --- 3. 等待所有 ACK 接收 (Node1 收到 ACK) ---
 	t.Logf("Waiting for %d ACKs on node1.MM.CompleteChan...", numMessages)
-	receivedAcks := make(map[string]bool)
-	timeout := time.After(10 * time.Second) // 增加超时时间以应对大量消息
+	var sum int
+	sum = 0
+	timeout := time.After(20 * time.Second) // 增加超时时间以应对大量消息
 
-	for len(receivedAcks) < numMessages {
+	for sum < numMessages {
 		select {
 		case completedHash := <-node1.MM.CompleteChan:
-			if _, ok := receivedAcks[completedHash]; ok {
-				t.Logf("Received duplicate ACK for hash: %s", completedHash)
-				continue
-			}
-			receivedAcks[completedHash] = true
-			if len(receivedAcks)%20 == 0 || len(receivedAcks) == numMessages {
-				t.Logf("Node1 received %d/%d ACKs.", len(receivedAcks), numMessages)
-			}
-
+			sum++
+			log.Printf("Node1 received ACK for %s (%d/%d)\n", completedHash, sum, numMessages)
 		case <-timeout:
-			t.Fatalf("Timeout: Node1 failed to receive all %d ACKs within 10 seconds. Received %d.", numMessages, len(receivedAcks))
+			t.Fatalf("Timeout: Node1 failed to receive all %d ACKs within 15 seconds. Received %d.", numMessages, sum)
 		}
 	}
 

@@ -1,6 +1,8 @@
 package MessageManage
 
 import (
+	"sync"
+
 	sm "github.com/sukasukasuka123/Gossip/StorageManage"
 	pb "github.com/sukasukasuka123/Gossip/gossip_rpc/proto"
 )
@@ -21,16 +23,20 @@ type MessageManager struct {
 	CompleteChan chan string // 用于通知消息已完成 (Hash)
 	SM           *sm.StorageManage
 	NodeHash     string
+
+	// 记录每个消息Hash对应的来源节点
+	// key: messageHash, value: sourceNodeHash
+	messageSourceMap sync.Map
 }
 
 // NewMessageManager 创建 MessageManager 实例
 func NewMessageManager(nodeHash string, smgr *sm.StorageManage) *MessageManager {
 	MM := &MessageManager{
-		MesSendChan:  make(chan *pb.GossipMessage, 100),
-		MesRecvChan:  make(chan *pb.GossipMessage, 100),
-		AckSendChan:  make(chan *pb.GossipACK, 100),
-		AckRecvChan:  make(chan *pb.GossipACK, 100),
-		CompleteChan: make(chan string, 100),
+		MesSendChan:  make(chan *pb.GossipMessage, 10000),
+		MesRecvChan:  make(chan *pb.GossipMessage, 10000),
+		AckSendChan:  make(chan *pb.GossipACK, 10000),
+		AckRecvChan:  make(chan *pb.GossipACK, 10000),
+		CompleteChan: make(chan string, 10000),
 		SM:           smgr,
 		NodeHash:     nodeHash,
 	}

@@ -7,12 +7,11 @@ import (
 )
 
 type NeighborManager struct {
-	SelfHash string                                   //方便传参
-	NStore   NeighborStore                            //方法封装
-	Factory  *GossipStreamFactory.DoubleStreamFactory // 流工厂(用于创造双流)
+	SelfHash string
+	NStore   NeighborStore
+	Factory  *GossipStreamFactory.DoubleStreamFactory
 
-	mu    sync.RWMutex
-	slots map[string]*NeighborSlot // nodeHash -> slot
+	slots sync.Map // nodeHash -> *NeighborSlot
 }
 
 // 创建解耦模式 NeighborManager
@@ -21,58 +20,57 @@ func NewNeighborManager(selfHash string, store NeighborStore, factory *GossipStr
 		SelfHash: selfHash,
 		NStore:   store,
 		Factory:  factory,
-		slots:    make(map[string]*NeighborSlot),
 	}
 }
 
 // Connect 建立连接（线程安全）
 func (m *NeighborManager) Connect(neighbor NeighborInfo) (*NeighborSlot, error) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	// 已存在
-	if slot, ok := m.slots[neighbor.NodeHash]; ok {
-		return slot, nil
+	// 先尝试 Load，避免重复创建
+	if slot, ok := m.slots.Load(neighbor.NodeHash); ok {
+		return slot.(*NeighborSlot), nil
 	}
 
+	// 创建新的双流
 	raw, err := m.Factory.GetDoubleStream(neighbor.NodeHash, neighbor.Endpoint)
 	if err != nil {
 		return nil, err
 	}
 
 	slot := NewNeighborSlot(neighbor.NodeHash, raw)
-	m.slots[neighbor.NodeHash] = slot
+
+	// 原子存储，如果已有则返回已有的
+	actual, loaded := m.slots.LoadOrStore(neighbor.NodeHash, slot)
+	if loaded {
+		// 已经存在
+		slot.Close() // 关闭自己创建的冗余 slot
+		return actual.(*NeighborSlot), nil
+	}
+
 	return slot, nil
 }
 
 // Disconnect 主动断开
 func (m *NeighborManager) Disconnect(nodeHash string) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	if slot, ok := m.slots[nodeHash]; ok {
-		slot.Close()
-		delete(m.slots, nodeHash)
+	if slot, ok := m.slots.Load(nodeHash); ok {
+		slot.(*NeighborSlot).Close()
+		m.slots.Delete(nodeHash)
 	}
 }
 
 // 获取邻居的双流 Slot（线程安全）
 func (m *NeighborManager) GetSlot(nodeHash string) (*NeighborSlot, bool) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-	slot, ok := m.slots[nodeHash]
-	return slot, ok
+	slot, ok := m.slots.Load(nodeHash)
+	if !ok {
+		return nil, false
+	}
+	return slot.(*NeighborSlot), true
 }
 
-// 遍历所有在线邻居（存在意义存疑，暂时保留方法）
+// 遍历所有在线邻居
 func (m *NeighborManager) RangeOnlineNeighbors(f func(n NeighborInfo, slot *NeighborSlot)) {
-	m.mu.RLock()
-	defer m.mu.RUnlock()
-
 	for _, n := range m.NStore.List() {
-		slot, ok := m.slots[n.NodeHash]
-		if ok {
-			f(n, slot)
+		if slot, ok := m.slots.Load(n.NodeHash); ok {
+			f(n, slot.(*NeighborSlot))
 		}
 	}
 }
