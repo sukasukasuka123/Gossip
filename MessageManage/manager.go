@@ -103,13 +103,6 @@ func (mm *MessageManager) OnAckSend(ack *pb.GossipACK) error {
 		Hash:     ack.Hash,
 		NodeHash: ack.FromHash,
 	})
-
-	select {
-	case mm.CompleteChan <- ack.Hash:
-		log.Printf("[MM] ACK send completed for %s", ack.Hash)
-	default:
-		// 避免阻塞
-	}
 	return nil
 }
 

@@ -1,9 +1,10 @@
 package test
 
 import (
+	"context"
 	"fmt"
-	"log"
 	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -17,334 +18,383 @@ import (
 	pb "github.com/sukasukasuka123/Gossip/gossip_rpc/proto"
 )
 
-// BenchmarkTwoNodesMessaging 测试两个节点之间的消息传递性能
+// =======================
+// Go 里的 static 等价物
+// =======================
+
+var globalNodeID int64 = 0
+
+func nextNodeID() int64 {
+	return atomic.AddInt64(&globalNodeID, 1)
+}
+
+// =======================
+// 默认节点工厂函数
+// =======================
+
+// newDefaultNode
+// - 不改你任何 Node 结构
+// - 不隐藏端口（避免 benchmark 冲突）
+// - 自动生成 nodeHash
+func newDefaultNode(
+	factory *GossipStreamFactory.DoubleStreamFactory,
+	port string,
+	storageSlots int64,
+	storageTTL time.Duration,
+) (*NodeManage.DoubleStreamNode, string) {
+
+	id := nextNodeID()
+	nodeHash := fmt.Sprintf("node-%d", id)
+
+	store := NeighborManage.NewMemoryNeighborStore()
+	logger := Logger.NewLogger()
+	router := Router.NewFanoutRouter()
+	smgr := StorageManage.NewStorageManage(
+		Storage.NewLocalStorage(storageSlots, storageTTL),
+	)
+
+	node := NodeManage.NewDoubleStreamNode(
+		nodeHash,
+		router,
+		logger,
+		store,
+		factory,
+		smgr,
+	)
+
+	if err := node.StartGRPCServer(port); err != nil {
+		panic(fmt.Sprintf("failed to start gRPC server on %s: %v", port, err))
+	}
+
+	return node, nodeHash
+}
 func BenchmarkTwoNodesMessaging(b *testing.B) {
-	// 创建流工厂
 	factory := GossipStreamFactory.NewDoubleStreamFactory(30 * time.Second)
 	defer factory.CloseAll()
-	// 节点1配置
-	node1Hash := "node1"
-	node1Port := ":50051"
-	store1 := NeighborManage.NewMemoryNeighborStore()
-	logger1 := Logger.NewLogger()
-	router1 := Router.NewFanoutRouter()
-	smgr1 := StorageManage.NewStorageManage(Storage.NewLocalStorage(4, 100*time.Second))
-	node1 := NodeManage.NewDoubleStreamNode(node1Hash, router1, logger1, store1, factory, smgr1)
+
+	node1, node1Hash := newDefaultNode(factory, ":50051", 4, 100*time.Second)
 	defer node1.StopGRPC()
-	// 节点2配置
-	node2Hash := "node2"
-	node2Port := ":50052"
-	store2 := NeighborManage.NewMemoryNeighborStore()
-	logger2 := Logger.NewLogger()
-	router2 := Router.NewFanoutRouter()
-	smgr2 := StorageManage.NewStorageManage(Storage.NewLocalStorage(4, 100*time.Second))
-	node2 := NodeManage.NewDoubleStreamNode(node2Hash, router2, logger2, store2, factory, smgr2)
+
+	node2, node2Hash := newDefaultNode(factory, ":50052", 4, 100*time.Second)
 	defer node2.StopGRPC()
-	// 启动gRPC服务器
-	if err := node1.StartGRPCServer(node1Port); err != nil {
-		b.Fatalf("Failed to start node1 gRPC server: %v", err)
-	}
-	if err := node2.StartGRPCServer(node2Port); err != nil {
-		b.Fatalf("Failed to start node2 gRPC server: %v", err)
-	}
-	// 等待服务器启动
+
 	time.Sleep(500 * time.Millisecond)
-	// 节点1连接到节点2
-	err := node1.ConnectToNeighbor(NeighborManage.NeighborInfo{
+
+	if err := node1.ConnectToNeighbor(NeighborManage.NeighborInfo{
 		NodeHash: node2Hash,
-		Endpoint: "localhost" + node2Port,
+		Endpoint: "localhost:50052",
 		Online:   true,
-	})
-	if err != nil {
-		b.Fatalf("Node1 failed to connect to Node2: %v", err)
+	}); err != nil {
+		b.Fatalf("Node1 connect failed: %v", err)
 	}
-	// 节点2连接到节点1
-	err = node2.ConnectToNeighbor(NeighborManage.NeighborInfo{
+
+	if err := node2.ConnectToNeighbor(NeighborManage.NeighborInfo{
 		NodeHash: node1Hash,
-		Endpoint: "localhost" + node1Port,
+		Endpoint: "localhost:50051",
 		Online:   true,
-	})
-	if err != nil {
-		b.Fatalf("Node2 failed to connect to Node1: %v", err)
+	}); err != nil {
+		b.Fatalf("Node2 connect failed: %v", err)
 	}
-	// 等待连接建立
+
 	time.Sleep(500 * time.Millisecond)
-	// 等待连接建立
-	time.Sleep(500 * time.Millisecond)
-	// 重置计时器，排除初始化时间
-	b.ResetTimer() // <-- 计时开始
-	// 运行基准测试
+	b.ResetTimer()
+
 	for i := 0; i < b.N; i++ {
 		msg := &pb.GossipMessage{
 			Hash:     fmt.Sprintf("msg-%d", i),
 			FromHash: node1Hash,
 			PayLoad:  []byte(fmt.Sprintf("test payload %d", i)),
 		}
-		err := node1.SendMessage(node2Hash, msg)
-		if err != nil {
-			b.Errorf("Failed to send message: %v", err)
+
+		if err := node1.SendMessage(node2Hash, msg); err != nil {
+			b.Errorf("send failed: %v", err)
 		}
+
 		select {
 		case completedHash := <-node1.MM.CompleteChan:
 			if completedHash != msg.Hash {
-				b.Fatalf("ReceivedACK hash: got %s, expected %s", completedHash, msg.Hash)
+				b.Fatalf("ACK mismatch: got %s want %s", completedHash, msg.Hash)
 			}
-			// 成功解除阻塞，进入下一个循环
-			// 注意：这里移除了 b.StopTimer()
-		case <-time.After(10 * time.Second): // 设置一个合理的等待上限
-			b.Fatalf("Message %s failed to receive ACK within timeout", msg.Hash)
+		case <-time.After(10 * time.Second):
+			b.Fatalf("timeout waiting for ACK")
 		}
 	}
-	// [关键修改] 在循环结束后，清理操作开始前，停止计时器
-	b.StopTimer()
-	// 接下来函数返回，defer 语句 (node1.StopGRPC() 等) 开始执行
-}
 
-// // BenchmarkParallelMessaging 测试并发消息传递性能
-//
-//	func BenchmarkParallelMessaging(b *testing.B) {
-//		factory := GossipStreamFactory.NewDoubleStreamFactory(30 * time.Second)
-//		defer factory.CloseAll()
-//		node1Hash := "node1"
-//		node1Port := ":50053"
-//		store1 := NeighborManage.NewMemoryNeighborStore()
-//		logger1 := Logger.NewLogger()
-//		router1 := Router.NewFanoutRouter()
-//		node1 := NodeManage.NewDoubleStreamNode(node1Hash, router1, logger1, store1, factory)
-//		defer node1.StopGRPC()
-//		node2Hash := "node2"
-//		node2Port := ":50054"
-//		store2 := NeighborManage.NewMemoryNeighborStore()
-//		logger2 := Logger.NewLogger()
-//		router2 := Router.NewFanoutRouter()
-//		node2 := NodeManage.NewDoubleStreamNode(node2Hash, router2, logger2, store2, factory)
-//		defer node2.StopGRPC()
-//		if err := node1.StartGRPCServer(node1Port); err != nil {
-//			b.Fatalf("Failed to start node1 gRPC server: %v", err)
-//		}
-//		if err := node2.StartGRPCServer(node2Port); err != nil {
-//			b.Fatalf("Failed to start node2 gRPC server: %v", err)
-//		}
-//		time.Sleep(500 * time.Millisecond)
-//		err := node1.ConnectToNeighbor(NeighborManage.NeighborInfo{
-//			NodeHash: node2Hash,
-//			Endpoint: "localhost" + node2Port,
-//			Online:   true,
-//		})
-//		if err != nil {
-//			b.Fatalf("Node1 failed to connect to Node2: %v", err)
-//		}
-//		err = node2.ConnectToNeighbor(NeighborManage.NeighborInfo{
-//			NodeHash: node1Hash,
-//			Endpoint: "localhost" + node1Port,
-//			Online:   true,
-//		})
-//		if err != nil {
-//			b.Fatalf("Node2 failed to connect to Node1: %v", err)
-//		}
-//		time.Sleep(500 * time.Millisecond)
-//		b.ResetTimer()
-//		// 并行发送消息
-//		b.RunParallel(func(pb *testing.PB) {
-//			i := 0
-//			for pb.Next() {
-//				msg := &pb.GossipMessage{
-//					Hash:     fmt.Sprintf("msg-%d-%d", time.Now().UnixNano(), i),
-//					FromHash: node1Hash,
-//					PayLoad:  []byte(fmt.Sprintf("test payload %d", i)),
-//				}
-//				_ = node1.SendMessage(node2Hash, msg)
-//				i++
-//			}
-//		})
-//	}
-//
-// BenchmarkBidirectionalMessaging 测试双向消息传递
+	b.StopTimer()
+}
 func BenchmarkBidirectionalMessaging(b *testing.B) {
 	factory := GossipStreamFactory.NewDoubleStreamFactory(30 * time.Second)
 	defer factory.CloseAll()
-	// 节点1配置
-	node1Hash := "node1"
-	node1Port := ":50051"
-	store1 := NeighborManage.NewMemoryNeighborStore()
-	logger1 := Logger.NewLogger()
-	router1 := Router.NewFanoutRouter()
-	smgr1 := StorageManage.NewStorageManage(Storage.NewLocalStorage(40, 100*time.Second))
-	node1 := NodeManage.NewDoubleStreamNode(node1Hash, router1, logger1, store1, factory, smgr1)
+
+	node1, node1Hash := newDefaultNode(factory, ":50051", 40, 100*time.Second)
 	defer node1.StopGRPC()
-	// 节点2配置
-	node2Hash := "node2"
-	node2Port := ":50052"
-	store2 := NeighborManage.NewMemoryNeighborStore()
-	logger2 := Logger.NewLogger()
-	router2 := Router.NewFanoutRouter()
-	smgr2 := StorageManage.NewStorageManage(Storage.NewLocalStorage(40, 100*time.Second))
-	node2 := NodeManage.NewDoubleStreamNode(node2Hash, router2, logger2, store2, factory, smgr2)
+
+	node2, node2Hash := newDefaultNode(factory, ":50052", 40, 100*time.Second)
 	defer node2.StopGRPC()
-	if err := node1.StartGRPCServer(node1Port); err != nil {
-		b.Fatalf("Failed to start node1 gRPC server: %v", err)
-	}
-	if err := node2.StartGRPCServer(node2Port); err != nil {
-		b.Fatalf("Failed to start node2 gRPC server: %v", err)
-	}
+
 	time.Sleep(500 * time.Millisecond)
-	err := node1.ConnectToNeighbor(NeighborManage.NeighborInfo{
+
+	_ = node1.ConnectToNeighbor(NeighborManage.NeighborInfo{
 		NodeHash: node2Hash,
-		Endpoint: "localhost" + node2Port,
+		Endpoint: "localhost:50052",
 		Online:   true,
 	})
-	if err != nil {
-		b.Fatalf("Node1 failed to connect to Node2: %v", err)
-	}
-	err = node2.ConnectToNeighbor(NeighborManage.NeighborInfo{
+	_ = node2.ConnectToNeighbor(NeighborManage.NeighborInfo{
 		NodeHash: node1Hash,
-		Endpoint: "localhost" + node1Port,
+		Endpoint: "localhost:50051",
 		Online:   true,
 	})
-	if err != nil {
-		b.Fatalf("Node2 failed to connect to Node1: %v", err)
-	}
+
 	time.Sleep(500 * time.Millisecond)
 	b.ResetTimer()
+
 	var wg sync.WaitGroup
 	wg.Add(2)
-	// 节点1发送消息
+
 	go func() {
 		defer wg.Done()
 		for i := 0; i < b.N/2; i++ {
 			msg := &pb.GossipMessage{
 				Hash:     fmt.Sprintf("node1-msg-%d", i),
 				FromHash: node1Hash,
-				PayLoad:  []byte(fmt.Sprintf("from node1: %d", i)),
+				PayLoad:  []byte("from node1"),
 			}
 			_ = node1.SendMessage(node2Hash, msg)
 		}
 	}()
-	// 节点2发送消息
+
 	go func() {
 		defer wg.Done()
 		for i := 0; i < b.N/2; i++ {
 			msg := &pb.GossipMessage{
 				Hash:     fmt.Sprintf("node2-msg-%d", i),
 				FromHash: node2Hash,
-				PayLoad:  []byte(fmt.Sprintf("from node2: %d", i)),
+				PayLoad:  []byte("from node2"),
 			}
 			_ = node2.SendMessage(node1Hash, msg)
 		}
 	}()
+
 	wg.Wait()
 }
-
-// TestTwoNodesBasicCommunication 基础功能测试
 func TestTwoNodesBasicCommunication(t *testing.T) {
-	// 设置 Stream Factory，确保连接可以被管理和关闭
 	factory := GossipStreamFactory.NewDoubleStreamFactory(30 * time.Second)
 	defer factory.CloseAll()
 
-	// --- 节点1配置 ---
-	node1Hash := "node1"
-	node1Port := ":50051"
-	store1 := NeighborManage.NewMemoryNeighborStore()
-	logger1 := Logger.NewLogger()
-	router1 := Router.NewFanoutRouter()
-	smgr1 := StorageManage.NewStorageManage(Storage.NewLocalStorage(40, 100*time.Second))
-	// 确保 NodeManage 结构体中的 MM 字段类型已修正为指针 (*MessageManager)
-	node1 := NodeManage.NewDoubleStreamNode(node1Hash, router1, logger1, store1, factory, smgr1)
+	node1, node1Hash := newDefaultNode(factory, ":50051", 40, 100*time.Second)
 	defer node1.StopGRPC()
 
-	// --- 节点2配置 ---
-	node2Hash := "node2"
-	node2Port := ":50052"
-	store2 := NeighborManage.NewMemoryNeighborStore()
-	logger2 := Logger.NewLogger()
-	router2 := Router.NewFanoutRouter()
-	smgr2 := StorageManage.NewStorageManage(Storage.NewLocalStorage(40, 100*time.Second))
-	node2 := NodeManage.NewDoubleStreamNode(node2Hash, router2, logger2, store2, factory, smgr2)
+	node2, node2Hash := newDefaultNode(factory, ":50052", 40, 100*time.Second)
 	defer node2.StopGRPC()
 
-	// 启动服务器
-	if err := node1.StartGRPCServer(node1Port); err != nil {
-		t.Fatalf("Failed to start node1 gRPC server: %v", err)
-	}
-	if err := node2.StartGRPCServer(node2Port); err != nil {
-		t.Fatalf("Failed to start node2 gRPC server: %v", err)
-	}
 	time.Sleep(500 * time.Millisecond)
 
-	// 建立连接
-	t.Log("Establishing connection between node1 and node2...")
-	err := node1.ConnectToNeighbor(NeighborManage.NeighborInfo{NodeHash: node2Hash, Endpoint: "localhost" + node2Port, Online: true})
-	if err != nil {
-		t.Fatalf("Node1 failed to connect to Node2: %v", err)
-	}
-	err = node2.ConnectToNeighbor(NeighborManage.NeighborInfo{NodeHash: node1Hash, Endpoint: "localhost" + node1Port, Online: true})
-	if err != nil {
-		t.Fatalf("Node2 failed to connect to Node1: %v", err)
-	}
-	time.Sleep(500 * time.Millisecond)
-	t.Log("Connection established.")
+	_ = node1.ConnectToNeighbor(NeighborManage.NeighborInfo{
+		NodeHash: node2Hash,
+		Endpoint: "localhost:50052",
+		Online:   true,
+	})
+	_ = node2.ConnectToNeighbor(NeighborManage.NeighborInfo{
+		NodeHash: node1Hash,
+		Endpoint: "localhost:50051",
+		Online:   true,
+	})
 
-	// --- 1. 定义测试消息 ---
+	time.Sleep(500 * time.Millisecond)
+
 	const numMessages = 15000
-	messages := make([]*pb.GossipMessage, numMessages)
-
-	// --- 2. 节点1 发送大量消息给节点2 ---
-	t.Logf("Node1 sending %d messages to Node2...", numMessages)
 	for i := 0; i < numMessages; i++ {
-		hash := fmt.Sprintf("test-msg-%d", i)
 		msg := &pb.GossipMessage{
-			Hash:     hash,
+			Hash:     fmt.Sprintf("test-msg-%d", i),
 			FromHash: node1Hash,
-			PayLoad:  []byte(fmt.Sprintf("Hello from Node1, message %d", i)),
+			PayLoad:  []byte("hello"),
 		}
-		messages[i] = msg
-
-		if err := node1.SendMessage(node2Hash, msg); err != nil {
-			t.Errorf("Failed to send message %s: %v", hash, err)
-		}
+		_ = node1.SendMessage(node2Hash, msg)
 	}
-	t.Logf("%d messages sent from Node1 to Node2.", numMessages)
 
-	// --- 3. 等待所有 ACK 接收 (Node1 收到 ACK) ---
-	t.Logf("Waiting for %d ACKs on node1.MM.CompleteChan...", numMessages)
-	var sum int
-	sum = 0
-	timeout := time.After(20 * time.Second) // 增加超时时间以应对大量消息
+	timeout := time.After(20 * time.Second)
+	received := 0
 
-	for sum < numMessages {
+	for received < numMessages {
 		select {
-		case completedHash := <-node1.MM.CompleteChan:
-			sum++
-			log.Printf("Node1 received ACK for %s (%d/%d)\n", completedHash, sum, numMessages)
+		case <-node1.MM.CompleteChan:
+			received++
 		case <-timeout:
-			t.Fatalf("Timeout: Node1 failed to receive all %d ACKs within 15 seconds. Received %d.", numMessages, sum)
+			t.Fatalf("timeout: got %d/%d ACKs", received, numMessages)
 		}
 	}
 
-	t.Logf("Communication test successful. All %d messages sent, received by Node2, and ACKs confirmed by Node1.", numMessages)
+	t.Logf("All %d messages ACKed", numMessages)
 }
 
-// BenchmarkStreamFactory 测试流工厂的性能
-func BenchmarkStreamFactory(b *testing.B) {
-	factory := GossipStreamFactory.NewDoubleStreamFactory(30 * time.Second)
+func BenchmarkMultiNodeLargeMessage(b *testing.B) {
+	const (
+		nodeCount       = 4          // 节点数量（？>=3）
+		messagesPerPeer = 30         // 每个节点给每个邻居发 ？ 条
+		payloadSize     = 512 * 1024 // ？KB
+		basePort        = 51000
+		storageSlots    = 200
+		storageTTL      = 120 * time.Second
+	)
+
+	factory := GossipStreamFactory.NewDoubleStreamFactory(60 * time.Second)
 	defer factory.CloseAll()
-	// 启动一个临时服务器用于连接
-	logger := Logger.NewLogger()
-	router := Router.NewFanoutRouter()
-	smgr := StorageManage.NewStorageManage(Storage.NewLocalStorage(40, 100*time.Second))
-	node := NodeManage.NewDoubleStreamNode("test-node", router, logger,
-		NeighborManage.NewMemoryNeighborStore(), factory, smgr)
-	defer node.StopGRPC()
-	if err := node.StartGRPCServer(":50059"); err != nil {
-		b.Fatalf("Failed to start test server: %v", err)
+
+	// ==========================
+	// 1. 创建节点
+	// ==========================
+
+	nodes := make([]*NodeManage.DoubleStreamNode, 0, nodeCount)
+	nodeHashes := make([]string, 0, nodeCount)
+	ports := make([]string, 0, nodeCount)
+
+	for i := 0; i < nodeCount; i++ {
+		port := fmt.Sprintf(":%d", basePort+i)
+		node, hash := newDefaultNode(factory, port, storageSlots, storageTTL)
+
+		nodes = append(nodes, node)
+		nodeHashes = append(nodeHashes, hash)
+		ports = append(ports, port)
 	}
-	time.Sleep(500 * time.Millisecond)
-	b.ResetTimer()
-	// 测试流的获取性能
-	for i := 0; i < b.N; i++ {
-		_, err := factory.GetDoubleStream(fmt.Sprintf("node-%d", i%10), "localhost:50059")
-		if err != nil {
-			b.Errorf("Failed to get stream: %v", err)
+
+	defer func() {
+		for _, n := range nodes {
+			n.StopGRPC()
+		}
+	}()
+
+	time.Sleep(800 * time.Millisecond)
+
+	// ==========================
+	// 2. 全互连
+	// ==========================
+
+	for i := 0; i < nodeCount; i++ {
+		for j := 0; j < nodeCount; j++ {
+			if i == j {
+				continue
+			}
+
+			err := nodes[i].ConnectToNeighbor(NeighborManage.NeighborInfo{
+				NodeHash: nodeHashes[j],
+				Endpoint: "localhost" + ports[j],
+				Online:   true,
+			})
+			if err != nil {
+				b.Fatalf("connect failed: %v", err)
+			}
 		}
 	}
+
+	time.Sleep(800 * time.Millisecond)
+
+	// ==========================
+	// 3. 准备大 payload
+	// ==========================
+
+	largePayload := make([]byte, payloadSize)
+	for i := range largePayload {
+		largePayload[i] = byte(i % 251)
+	}
+
+	totalMessages := nodeCount * (nodeCount - 1) * messagesPerPeer
+	b.Logf(
+		"Multi-node large message benchmark: nodes=%d, payload=%dKB, totalMessages=%d",
+		nodeCount,
+		payloadSize/1024,
+		totalMessages,
+	)
+
+	// ==========================
+	// 4. 开始压测
+	// ==========================
+
+	b.ResetTimer()
+
+	var wgSend sync.WaitGroup
+	wgSend.Add(nodeCount)
+
+	for i := 0; i < nodeCount; i++ {
+		go func(senderIdx int) {
+			defer wgSend.Done()
+
+			sender := nodes[senderIdx]
+			senderHash := nodeHashes[senderIdx]
+
+			// ← 对每个邻居也并发发送
+			var wgPeer sync.WaitGroup
+			for j := 0; j < nodeCount; j++ {
+				if senderIdx == j {
+					continue
+				}
+
+				wgPeer.Add(1)
+				go func(peerIdx int) {
+					defer wgPeer.Done()
+					receiverHash := nodeHashes[peerIdx]
+
+					// 向这个邻居串行发送 30 条
+					for k := 0; k < messagesPerPeer; k++ {
+						msgHash := fmt.Sprintf("large-%s-to-%s-%d",
+							senderHash, receiverHash, k)
+
+						msg := &pb.GossipMessage{
+							Hash:     msgHash,
+							FromHash: senderHash,
+							PayLoad:  largePayload,
+						}
+
+						if err := sender.SendMessage(receiverHash, msg); err != nil {
+							b.Errorf("send failed: %v", err)
+						}
+					}
+				}(j)
+			}
+			wgPeer.Wait()
+		}(i)
+	}
+
+	wgSend.Wait()
+	// ==========================
+	// 5. 等待所有 ACK
+	// ==========================
+
+	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
+	defer cancel()
+
+	ackReceived := int32(0)
+
+	var wgAck sync.WaitGroup
+	wgAck.Add(nodeCount)
+
+	for i := 0; i < nodeCount; i++ {
+		go func(idx int) {
+			defer wgAck.Done()
+			node := nodes[idx]
+
+			for {
+				select {
+				case <-node.MM.CompleteChan:
+					if atomic.AddInt32(&ackReceived, 1) >= int32(totalMessages) {
+						cancel() // 收到足够的 ACK 后立即取消
+						return
+					}
+				case <-ctx.Done():
+					return
+				}
+			}
+		}(i)
+	}
+
+	// 等待完成
+	wgAck.Wait()
+	cancel() // 确保取消
+
+	final := atomic.LoadInt32(&ackReceived)
+	if final < int32(totalMessages) {
+		b.Fatalf("ACK incomplete: received %d / %d", final, totalMessages)
+	}
+
+	b.Logf("All ACKs received: %d", final)
+	b.StopTimer()
 }

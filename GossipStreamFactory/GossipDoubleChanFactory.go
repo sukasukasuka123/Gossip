@@ -68,9 +68,9 @@ func NewDoubleStreamFactory(ttl time.Duration, opts ...grpc.DialOption) *DoubleS
 		opts = []grpc.DialOption{
 			grpc.WithTransportCredentials(insecure.NewCredentials()),
 			grpc.WithKeepaliveParams(keepalive.ClientParameters{
-				Time:                10 * time.Second,
-				Timeout:             3 * time.Second,
-				PermitWithoutStream: true,
+				Time:                60 * time.Second,
+				Timeout:             20 * time.Second,
+				PermitWithoutStream: false,
 			}),
 		}
 	}

@@ -1,235 +1,250 @@
-# Gossip 协议系统说明文档（基于 gRPC 的新版）
+# Gossip 多节点双流系统使用说明（含大消息压测示例）
 
-一个基于 **gRPC 传输层** 的分布式 Gossip 协议系统，实现节点间的去中心化消息广播、重复抑制、基于 ACK 的确认与可靠传播、以及按拓扑结构自适应的 TTL 状态管理。
+本项目实现了一套基于 **gRPC 双向流（MessageStream + AckStream）** 的 Gossip 通信系统，支持：
 
-本版 README 已完全更新为 **gRPC 版本**，删除旧的 HTTP/gin 相关内容，文档重点转向 gRPC 服务接口、客户端工厂、节点模型更新后的调用方式和参数说明。
+* 多节点并发通信
+* 大消息（500KB+）稳定传输
+* ACK 收敛与状态追踪
+* 高并发基准测试（benchmark）
 
----
+本文档说明：
 
-## 系统概述
-
-系统采用 Gossip（谣言式扩散）机制进行消息传播：节点收到消息后去重、确认、再向部分邻居广播，最终消息可在网络中快速“泛洪”。新版本将底层传输从 HTTP/gin 替换为 **Protocol Buffers + gRPC**，实现更高吞吐、更低延迟、支持连接复用与双向通信，为生产级调度提供基础。
-
-核心变化：
-
-* 使用 protobuf 定义 Gossip RPC 协议。
-* 每个节点启动一个 gRPC 服务器，注册 Gossip 服务。
-* 通过 **GossipClientFactory** 实现可复用的 gRPC 客户端连接（Dial 缓存）。
-* 所有消息、ACK 均通过 RPC 方法 `PutMessageToClient` 发送。
+1. 一个 Gossip 节点是如何初始化的
+2. 多节点如何建立邻居关系
+3. 如何进行多节点大消息压测
 
 ---
 
-## 模块结构
+## 一、节点初始化流程
 
-### 1. protobuf 层（proto/）
+### 1️⃣ 节点的核心组成
 
-定义了 Gossip RPC 协议：
+一个 `DoubleStreamNode` 在初始化时包含以下核心组件：
 
-* GossipMessage：包含 hash、来源节点、payload。
-* GossipAck：确认消息。
-* Gossip 服务：提供 `PutMessageToClient` RPC。
-
-生成文件：
-
-* `gossip_rpc.pb.go`
-* `gossip_rpc_grpc.pb.go`
-
-这些文件为服务器和客户端提供 Go API。
+* **NodeHash**：节点唯一标识
+* **gRPC Server**：用于接收 MessageStream / AckStream
+* **NeighborManager**：管理邻居节点与双流连接
+* **MessageManager**：负责消息状态、ACK 路由与完成判定
+* **DoubleStreamFactory**：复用与管理 gRPC 双流连接
+* **Storage**：记录消息发送 / ACK 状态（带 TTL）
 
 ---
 
-### 2. 节点管理（NodeManage/）
+### 2️⃣ 默认节点构造函数示例
 
-新版 `GossipNode` 已非泛型，结构被重写以使用 gRPC。
-
-核心内容：
-
-* 嵌入 `pb.UnimplementedGossipServer`，作为 RPC 服务端。
-* 维护邻居映射（neighborHash → endpoint）。
-* 内置 TTL 状态机、重复检测、邻居 ACK 统计。
-* 使用 GossipClientFactory 进行 RPC 调用。
-
-#### 关键方法
-
-**StartGRPCServer(port string)**
-
-* 启动 gRPC 服务，监听端口。
-* 注册 Gossip 服务实现。
-
-**PutMessageToClient(context, *pb.GossipMessage)**
-
-* RPC 接收入口。
-* 完成去重、初始化状态、记录 ACK、广播给 fanout 邻居。
-
-**AddNeighbor(nodeHash, endpoint)**
-
-* 动态添加邻居端点（如："127.0.0.1:9001"）。
-* 更新 TTL 限制参数。
-
-内部广播全部通过：
-
-**broadcastToTargets(targets []string, msg *pb.GossipMessage)**
-
-* 为每个 target 取出客户端
-* 构造 context with timeout
-* 执行异步 RPC
-
----
-
-### 3. GossipClientFactory（可复用的客户端连接池）
-
-文件：`GossipClientFactory/GossipClientFactory.go`
-
-用于缓存 Dial 的 grpc.ClientConn：
-
-* 相同 endpoint 的连接不会重复拨号
-* 节省连接建立成本
-* 提供 Release() 方法统一关闭
-* 提供 ContextWithTimeout 创建外发 RPC 的超时上下文
-
-使用方式示例：
-
-```
-cli := factory.GetClient(endpoint)
-resp, err := cli.PutMessageToClient(ctx, msg)
-```
-
----
-
-### 4. 存储与 TTL
-
-仍使用之前的 LocalStorage 管理：
-
-* 消息已见（seen）缓存
-* 邻居 ACK 状态表
-* 自适应 TTL（2～64 秒范围）
-* 长 TTL 缓存 10 分钟
-* 周期衰减机制维持稳定内存占用
-
-TTL 行为不因迁移到 gRPC 而改变。
-
----
-
-## gRPC API 定义说明
-
-### RPC：PutMessageToClient
-
-```
-rpc PutMessageToClient(GossipMessage) returns (GossipAck)
-```
-
-作用：
-
-* 接收消息 / 去重
-* 初始化状态
-* 返回 ACK
-* fanout 广播
-
-入参：pb.GossipMessage
-
-* hash：消息唯一 ID
-* fromHash：来源节点
-* payload：字符串载荷
-
-返回：pb.GossipAck
-
-* hash：同一消息 hash
-* from：接收方节点 hash
-
----
-
-## GossipNode 的主要使用方法
-
-### 1. 创建节点
+以下函数展示了一个**最小但完整**的 Gossip 节点初始化流程：
 
 ```go
-node := NewGossipNode(
-    selfHash,
-    endpoint,
-    storage,
-    router,
-    logger,
-    clientFactory,
+func newDefaultNode(
+	factory *GossipStreamFactory.DoubleStreamFactory,
+	port string,
+	storageSlots int64,
+	storageTTL time.Duration,
+) (*NodeManage.DoubleStreamNode, string) {
+
+	id := nextNodeID()
+	nodeHash := fmt.Sprintf("node-%d", id)
+
+	// 邻居存储（内存实现）
+	store := NeighborManage.NewMemoryNeighborStore()
+
+	// 日志、路由器
+	logger := Logger.NewLogger()
+	router := Router.NewFanoutRouter()
+
+	// 消息状态存储（用于 ACK 收敛）
+	smgr := StorageManage.NewStorageManage(
+		Storage.NewLocalStorage(storageSlots, storageTTL),
+	)
+
+	// 创建节点
+	node := NodeManage.NewDoubleStreamNode(
+		nodeHash,
+		router,
+		logger,
+		store,
+		factory,
+		smgr,
+	)
+
+	// 启动 gRPC Server
+	if err := node.StartGRPCServer(port); err != nil {
+		panic(fmt.Sprintf("failed to start gRPC server on %s: %v", port, err))
+	}
+
+	return node, nodeHash
+}
+```
+
+📌 **要点说明**
+
+* `DoubleStreamFactory` **应全局共享**，用于复用 gRPC 连接
+* 每个节点监听一个独立端口
+* 节点启动后即可接受其他节点的流式连接
+
+---
+
+## 二、节点之间建立邻居关系
+
+### 1️⃣ 邻居模型
+
+每个节点通过 `NeighborManager` 管理邻居，邻居信息包括：
+
+* `NodeHash`：邻居节点 ID
+* `Endpoint`：gRPC 地址
+* `Online`：是否在线
+
+---
+
+### 2️⃣ 节点互连示例（全互连）
+
+以下代码展示了 **N 个节点之间建立全互连 Gossip 网络**：
+
+```go
+for i := 0; i < nodeCount; i++ {
+	for j := 0; j < nodeCount; j++ {
+		if i == j {
+			continue
+		}
+
+		err := nodes[i].ConnectToNeighbor(NeighborManage.NeighborInfo{
+			NodeHash: nodeHashes[j],
+			Endpoint: "localhost" + ports[j],
+			Online:   true,
+		})
+		if err != nil {
+			b.Fatalf("connect failed: %v", err)
+		}
+	}
+}
+```
+
+📌 **行为说明**
+
+* 每次 `ConnectToNeighbor`：
+
+  * 创建（或复用）到目标节点的双流连接
+  * 自动绑定 MessageStream 接收与 ACK 写入协程
+* 连接建立后，节点即可直接调用 `SendMessage`
+
+---
+
+## 三、多节点大消息压测（Benchmark）
+
+### 1️⃣ Benchmark 目标
+
+该 Benchmark 用于验证：
+
+* 多节点（≥3）
+* 大消息（≥500KB）
+* 高并发发送
+* ACK 是否完整收敛
+* 系统在高负载下是否稳定
+
+---
+
+### 2️⃣ Benchmark 参数说明
+
+```go
+const (
+	nodeCount       = 4          // 节点数量（>=3）
+	messagesPerPeer = 30         // 每个节点给每个邻居发送的消息数
+	payloadSize     = 512 * 1024 // 单条消息大小（512KB）
+	basePort        = 51000
+	storageSlots    = 200
+	storageTTL      = 120 * time.Second
 )
 ```
 
-### 2. 启动 gRPC 服务
+实际消息总数为：
+
+```
+nodeCount × (nodeCount - 1) × messagesPerPeer
+```
+
+---
+
+### 3️⃣ Benchmark 核心逻辑说明
+
+#### 🔹 消息发送阶段
+
+* 每个节点并发向所有邻居发送消息
+* 对单个邻居的发送是**串行的**
+* 对不同邻居是**并行的**
 
 ```go
-node.StartGRPCServer(":9001")
+for k := 0; k < messagesPerPeer; k++ {
+	msg := &pb.GossipMessage{
+		Hash:     msgHash,
+		FromHash: senderHash,
+		PayLoad:  largePayload,
+	}
+
+	if err := sender.SendMessage(receiverHash, msg); err != nil {
+		b.Errorf("send failed: %v", err)
+	}
+}
 ```
 
-### 3. 添加邻居
+---
+
+#### 🔹 ACK 收敛阶段
+
+* 所有节点监听 `MessageManager.CompleteChan`
+* 每收到一个完整 ACK 即计数
+* 当 ACK 数达到预期值时结束 benchmark
 
 ```go
-node.AddNeighbor("node2", "127.0.0.1:9002")
+case <-node.MM.CompleteChan:
+	if atomic.AddInt32(&ackReceived, 1) >= int32(totalMessages) {
+		cancel()
+		return
+	}
 ```
 
-### 4. 主动发消息（本地触发）
+---
+
+### 4️⃣ Benchmark 成功条件
 
 ```go
-msg := &pb.GossipMessage{Hash: "123", FromHash: node.Hash, Payload: "hello"}
-node.PutMessageToClient(context.Background(), msg)
+if final < int32(totalMessages) {
+	b.Fatalf("ACK incomplete: received %d / %d", final, totalMessages)
+}
 ```
 
----
-
-## main.go 测试逻辑（新版）
-
-新版示例测试创建 **20 个节点**，端口从 6001 到 6020，以 **环形拓扑** 相互连接。
-
-流程：
-
-1. 初始化统一 storage/router/logger
-2. 创建 20 个 GossipNode
-3. 每个节点启动 gRPC 服务
-4. 构建环形邻居（i → i+1）
-5. 从每个节点发送 3 条测试消息
-6. 等待传播完成后退出
-
-**不再使用任何 HTTP / gin / JSON**。
+只有在 **所有消息的 ACK 都成功收敛** 时，Benchmark 才算通过。
 
 ---
 
-## 当前文件结构
+## 四、Benchmark 结果解读（示例）
 
 ```
-Gossip/
-├── gossip_rpc/              # 生成的 protobuf RPC 文件
-├── proto/                   # .proto 文件
-├── NodeManage/              # gRPC 化后的 GossipNode
-│   ├── gossip_grpc.go       # RPC 处理、广播逻辑
-│   ├── AddNeighbor.go
-│   ├── node_model.go
-│   └── ...
-├── GossipClientFactory/     # gRPC 客户端工厂
-├── go.mod / go.sum
-└── main.go                  # gRPC 测试入口
+BenchmarkMultiNodeLargeMessage-8
+3        2665671600 ns/op
+         73619736 B/op
+         12086 allocs/op
 ```
 
----
+含义：
 
-## 当前限制
+* 一次完整多节点 Gossip 回合耗时约 **2.6 秒**
+* 期间堆分配约 **70MB**
+* 系统在高负载下 **无死锁、无丢 ACK、无 gRPC 断流**
 
-* 无 TLS / 认证
-* 无连接心跳或健康检查
-* 固定 fanout=3
-* 无持久化状态
-* 单向 RPC（并未使用流式）
+📌 该 Benchmark 测量的是**系统整体稳定性与吞吐能力**，而非单条消息延迟。
 
 ---
 
-## 未来改进方向（基于 gRPC 的路线）
+## 五、总结
 
-* 增加 TLS、token 或 mTLS 身份校验
-* 引入 gRPC bidirectional streaming，支持批量广播
-* 添加健康检查与失败节点剔除机制
-* 动态调节 fanout
-* 增加持久化状态实现崩溃恢复
-* 增加监控、指标、可视化工具
+* 本系统采用 **双流（Message + ACK）** 模型，避免 ACK 阻塞数据流
+* 支持大消息、高并发、多节点 Gossip
+* Benchmark 验证了在高负载下系统行为是 **可预测、可收敛、可关闭的**
+* 后续可在此基础上扩展：
+
+  * ACK 合并
+  * Payload 零拷贝
+  * Gossip 分层（metadata / data plane）
 
 ---
 
-## 总结
-
-新版系统保留了原 Gossip 算法的核心机制（去重、ACK、fanout、TTL），同时将网络层彻底替换为 gRPC，实现更快、更稳定、可扩展的传输基础设施。整个项目的结构更清晰，节点启动、邻居维护、消息处理都围绕 gRPC API 展开，更适合继续扩展成真实的分布式系统原型。
