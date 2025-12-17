@@ -34,11 +34,6 @@ func (mm *MessageManager) MessageManageLoop() {
 			}
 			log.Printf("[MM] OnAckRecv processed ACK for %s from %s", ack.Hash, ack.FromHash)
 
-			// ❌ 移除这个 case！AckSendChan 由 Node 层的 globalAckRouter 处理
-			// case ack := <-mm.AckSendChan:
-			//     if err := mm.OnAckSend(ack); err != nil {
-			//         log.Printf("[MM-ERROR] OnAckSend: %v", err)
-			//     }
 		}
 	}
 }
@@ -119,3 +114,5 @@ func (mm *MessageManager) GetMessageSource(messageHash string) (string, bool) {
 func (mm *MessageManager) CleanupMessageSource(messageHash string) {
 	mm.messageSourceMap.Delete(messageHash)
 }
+
+//profiler

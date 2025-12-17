@@ -21,7 +21,4 @@ service Gossip {
     // 解耦模式
     rpc MessageStream(stream GossipMessage) returns (stream GossipMessage);
     rpc AckStream(stream GossipACK) returns (stream GossipACK);
-
-    //双向流模式
-    rpc Stream(stream GossipMessage) returns (stream GossipACK);
 }

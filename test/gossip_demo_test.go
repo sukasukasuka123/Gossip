@@ -3,6 +3,8 @@ package test
 import (
 	"context"
 	"fmt"
+	"net/http"
+	_ "net/http/pprof"
 	"sync"
 	"sync/atomic"
 	"testing"
@@ -17,6 +19,12 @@ import (
 	"github.com/sukasukasuka123/Gossip/StorageManage"
 	pb "github.com/sukasukasuka123/Gossip/gossip_rpc/proto"
 )
+
+func init() {
+	go func() {
+		http.ListenAndServe("localhost:6060", nil)
+	}()
+}
 
 // =======================
 // Go 里的 static 等价物
@@ -398,3 +406,5 @@ func BenchmarkMultiNodeLargeMessage(b *testing.B) {
 	b.Logf("All ACKs received: %d", final)
 	b.StopTimer()
 }
+
+// 缓存穿透、缓存雪崩……面试人很喜欢问

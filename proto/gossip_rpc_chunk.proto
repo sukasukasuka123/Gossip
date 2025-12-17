@@ -1,0 +1,23 @@
+syntax = "proto3";
+package gossip_rpc_chunk;
+import "google/protobuf/empty.proto";
+option go_package = "github.com/sukasukasuka123/Gossip/proto/gossip_rpc_chunk";
+// 分块消息
+message GossipChunk {
+    string Hash = 1;
+    string FromHash = 2;
+    bytes Chunk = 3;
+    int32 ChunkIndex = 4;
+    int32 TotalChunks = 5;
+}
+
+message GossipChunkAck{
+    string Hash = 1;
+    string FromHash = 2;
+    int32 ChunkIndex = 3;
+}
+service GossipChunkService {
+    // 分块消息流
+    rpc ChunkMessageStream(stream GossipChunk) returns (stream GossipChunk);
+    rpc ChunkAckStream(stream GossipChunkAck) returns (stream GossipChunkAck);
+}

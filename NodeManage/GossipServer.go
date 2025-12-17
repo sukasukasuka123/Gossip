@@ -91,44 +91,6 @@ func (s *GossipServer) AckStream(stream pb.Gossip_AckStreamServer) error {
 	}
 }
 
-// Stream 实现单双向流模式（可选实现）
-func (s *GossipServer) Stream(stream pb.Gossip_StreamServer) error {
-	ctx := stream.Context()
-	var remoteNodeHash string
-
-	for {
-		msg, err := stream.Recv()
-		if err == io.EOF {
-			s.node.Logger.Log(fmt.Sprintf("Stream closed by %s", remoteNodeHash), s.node.NodeHash)
-			return nil
-		}
-		if err != nil {
-			s.node.Logger.Log(fmt.Sprintf("Stream recv error from %s: %v", remoteNodeHash, err), s.node.NodeHash)
-			return err
-		}
-
-		if remoteNodeHash == "" && msg.FromHash != "" {
-			remoteNodeHash = msg.FromHash
-			s.node.Logger.Log(fmt.Sprintf("Stream connected from %s", remoteNodeHash), s.node.NodeHash)
-		}
-
-		// 处理消息
-		select {
-		case s.node.MM.MesRecvChan <- msg:
-			// 自动回复 ACK
-			ack := &pb.GossipACK{
-				Hash:     msg.Hash,
-				FromHash: s.node.NodeHash,
-			}
-			if err := stream.Send(ack); err != nil {
-				return err
-			}
-		case <-ctx.Done():
-			return ctx.Err()
-		}
-	}
-}
-
 // StartGRPCServer 启动 gRPC 服务端
 func (n *DoubleStreamNode) StartGRPCServer(port string) error {
 	lis, err := net.Listen("tcp", port)
