@@ -1,5 +1,6 @@
-package NodeManage
+package NodeManage_simpleMode
 
+// GossipServer.go
 import (
 	"fmt"
 	"io"

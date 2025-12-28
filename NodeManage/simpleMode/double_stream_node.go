@@ -1,5 +1,6 @@
-package NodeManage
+package NodeManage_simpleMode
 
+// double_stream_node.go
 import (
 	"fmt"
 	"log"

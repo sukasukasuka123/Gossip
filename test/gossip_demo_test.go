@@ -13,7 +13,7 @@ import (
 	"github.com/sukasukasuka123/Gossip/GossipStreamFactory"
 	"github.com/sukasukasuka123/Gossip/Logger"
 	"github.com/sukasukasuka123/Gossip/NeighborManage"
-	"github.com/sukasukasuka123/Gossip/NodeManage"
+	NodeManage "github.com/sukasukasuka123/Gossip/NodeManage/simpleMode"
 	"github.com/sukasukasuka123/Gossip/Router"
 	"github.com/sukasukasuka123/Gossip/Storage"
 	"github.com/sukasukasuka123/Gossip/StorageManage"
