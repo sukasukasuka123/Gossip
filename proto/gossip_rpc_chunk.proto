@@ -42,6 +42,5 @@ enum AckStatus {
 
 service GossipChunkService {
     // 分块消息流
-    rpc ChunkMessageStream(stream GossipChunk) returns (stream GossipChunk);
-    rpc ChunkAckStream(stream GossipChunkAck) returns (stream GossipChunkAck);
+    rpc PushChunks(stream GossipChunk) returns (stream GossipChunkAck);
 }

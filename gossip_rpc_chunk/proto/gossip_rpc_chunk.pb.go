@@ -280,10 +280,10 @@ const file_proto_gossip_rpc_chunk_proto_rawDesc = "" +
 	"\rACK_DUPLICATE\x10\x02\x12\x10\n" +
 	"\fACK_COMPLETE\x10\x03\x12\x0e\n" +
 	"\n" +
-	"ACK_REJECT\x10\x042\xc6\x01\n" +
-	"\x12GossipChunkService\x12V\n" +
-	"\x12ChunkMessageStream\x12\x1d.gossip_rpc_chunk.GossipChunk\x1a\x1d.gossip_rpc_chunk.GossipChunk(\x010\x01\x12X\n" +
-	"\x0eChunkAckStream\x12 .gossip_rpc_chunk.GossipChunkAck\x1a .gossip_rpc_chunk.GossipChunkAck(\x010\x01B:Z8github.com/sukasukasuka123/Gossip/proto/gossip_rpc_chunkb\x06proto3"
+	"ACK_REJECT\x10\x042g\n" +
+	"\x12GossipChunkService\x12Q\n" +
+	"\n" +
+	"PushChunks\x12\x1d.gossip_rpc_chunk.GossipChunk\x1a .gossip_rpc_chunk.GossipChunkAck(\x010\x01B:Z8github.com/sukasukasuka123/Gossip/proto/gossip_rpc_chunkb\x06proto3"
 
 var (
 	file_proto_gossip_rpc_chunk_proto_rawDescOnce sync.Once
@@ -306,12 +306,10 @@ var file_proto_gossip_rpc_chunk_proto_goTypes = []any{
 }
 var file_proto_gossip_rpc_chunk_proto_depIdxs = []int32{
 	0, // 0: gossip_rpc_chunk.GossipChunkAck.Status:type_name -> gossip_rpc_chunk.AckStatus
-	1, // 1: gossip_rpc_chunk.GossipChunkService.ChunkMessageStream:input_type -> gossip_rpc_chunk.GossipChunk
-	2, // 2: gossip_rpc_chunk.GossipChunkService.ChunkAckStream:input_type -> gossip_rpc_chunk.GossipChunkAck
-	1, // 3: gossip_rpc_chunk.GossipChunkService.ChunkMessageStream:output_type -> gossip_rpc_chunk.GossipChunk
-	2, // 4: gossip_rpc_chunk.GossipChunkService.ChunkAckStream:output_type -> gossip_rpc_chunk.GossipChunkAck
-	3, // [3:5] is the sub-list for method output_type
-	1, // [1:3] is the sub-list for method input_type
+	1, // 1: gossip_rpc_chunk.GossipChunkService.PushChunks:input_type -> gossip_rpc_chunk.GossipChunk
+	2, // 2: gossip_rpc_chunk.GossipChunkService.PushChunks:output_type -> gossip_rpc_chunk.GossipChunkAck
+	2, // [2:3] is the sub-list for method output_type
+	1, // [1:2] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
 	1, // [1:1] is the sub-list for extension extendee
 	0, // [0:1] is the sub-list for field type_name

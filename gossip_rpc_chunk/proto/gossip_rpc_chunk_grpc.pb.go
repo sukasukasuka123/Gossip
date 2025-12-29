@@ -19,8 +19,7 @@ import (
 const _ = grpc.SupportPackageIsVersion9
 
 const (
-	GossipChunkService_ChunkMessageStream_FullMethodName = "/gossip_rpc_chunk.GossipChunkService/ChunkMessageStream"
-	GossipChunkService_ChunkAckStream_FullMethodName     = "/gossip_rpc_chunk.GossipChunkService/ChunkAckStream"
+	GossipChunkService_PushChunks_FullMethodName = "/gossip_rpc_chunk.GossipChunkService/PushChunks"
 )
 
 // GossipChunkServiceClient is the client API for GossipChunkService service.
@@ -28,8 +27,7 @@ const (
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GossipChunkServiceClient interface {
 	// 分块消息流
-	ChunkMessageStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipChunk, GossipChunk], error)
-	ChunkAckStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipChunkAck, GossipChunkAck], error)
+	PushChunks(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipChunk, GossipChunkAck], error)
 }
 
 type gossipChunkServiceClient struct {
@@ -40,39 +38,25 @@ func NewGossipChunkServiceClient(cc grpc.ClientConnInterface) GossipChunkService
 	return &gossipChunkServiceClient{cc}
 }
 
-func (c *gossipChunkServiceClient) ChunkMessageStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipChunk, GossipChunk], error) {
+func (c *gossipChunkServiceClient) PushChunks(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipChunk, GossipChunkAck], error) {
 	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &GossipChunkService_ServiceDesc.Streams[0], GossipChunkService_ChunkMessageStream_FullMethodName, cOpts...)
+	stream, err := c.cc.NewStream(ctx, &GossipChunkService_ServiceDesc.Streams[0], GossipChunkService_PushChunks_FullMethodName, cOpts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &grpc.GenericClientStream[GossipChunk, GossipChunk]{ClientStream: stream}
+	x := &grpc.GenericClientStream[GossipChunk, GossipChunkAck]{ClientStream: stream}
 	return x, nil
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type GossipChunkService_ChunkMessageStreamClient = grpc.BidiStreamingClient[GossipChunk, GossipChunk]
-
-func (c *gossipChunkServiceClient) ChunkAckStream(ctx context.Context, opts ...grpc.CallOption) (grpc.BidiStreamingClient[GossipChunkAck, GossipChunkAck], error) {
-	cOpts := append([]grpc.CallOption{grpc.StaticMethod()}, opts...)
-	stream, err := c.cc.NewStream(ctx, &GossipChunkService_ServiceDesc.Streams[1], GossipChunkService_ChunkAckStream_FullMethodName, cOpts...)
-	if err != nil {
-		return nil, err
-	}
-	x := &grpc.GenericClientStream[GossipChunkAck, GossipChunkAck]{ClientStream: stream}
-	return x, nil
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type GossipChunkService_ChunkAckStreamClient = grpc.BidiStreamingClient[GossipChunkAck, GossipChunkAck]
+type GossipChunkService_PushChunksClient = grpc.BidiStreamingClient[GossipChunk, GossipChunkAck]
 
 // GossipChunkServiceServer is the server API for GossipChunkService service.
 // All implementations must embed UnimplementedGossipChunkServiceServer
 // for forward compatibility.
 type GossipChunkServiceServer interface {
 	// 分块消息流
-	ChunkMessageStream(grpc.BidiStreamingServer[GossipChunk, GossipChunk]) error
-	ChunkAckStream(grpc.BidiStreamingServer[GossipChunkAck, GossipChunkAck]) error
+	PushChunks(grpc.BidiStreamingServer[GossipChunk, GossipChunkAck]) error
 	mustEmbedUnimplementedGossipChunkServiceServer()
 }
 
@@ -83,11 +67,8 @@ type GossipChunkServiceServer interface {
 // pointer dereference when methods are called.
 type UnimplementedGossipChunkServiceServer struct{}
 
-func (UnimplementedGossipChunkServiceServer) ChunkMessageStream(grpc.BidiStreamingServer[GossipChunk, GossipChunk]) error {
-	return status.Error(codes.Unimplemented, "method ChunkMessageStream not implemented")
-}
-func (UnimplementedGossipChunkServiceServer) ChunkAckStream(grpc.BidiStreamingServer[GossipChunkAck, GossipChunkAck]) error {
-	return status.Error(codes.Unimplemented, "method ChunkAckStream not implemented")
+func (UnimplementedGossipChunkServiceServer) PushChunks(grpc.BidiStreamingServer[GossipChunk, GossipChunkAck]) error {
+	return status.Error(codes.Unimplemented, "method PushChunks not implemented")
 }
 func (UnimplementedGossipChunkServiceServer) mustEmbedUnimplementedGossipChunkServiceServer() {}
 func (UnimplementedGossipChunkServiceServer) testEmbeddedByValue()                            {}
@@ -110,19 +91,12 @@ func RegisterGossipChunkServiceServer(s grpc.ServiceRegistrar, srv GossipChunkSe
 	s.RegisterService(&GossipChunkService_ServiceDesc, srv)
 }
 
-func _GossipChunkService_ChunkMessageStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(GossipChunkServiceServer).ChunkMessageStream(&grpc.GenericServerStream[GossipChunk, GossipChunk]{ServerStream: stream})
+func _GossipChunkService_PushChunks_Handler(srv interface{}, stream grpc.ServerStream) error {
+	return srv.(GossipChunkServiceServer).PushChunks(&grpc.GenericServerStream[GossipChunk, GossipChunkAck]{ServerStream: stream})
 }
 
 // This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type GossipChunkService_ChunkMessageStreamServer = grpc.BidiStreamingServer[GossipChunk, GossipChunk]
-
-func _GossipChunkService_ChunkAckStream_Handler(srv interface{}, stream grpc.ServerStream) error {
-	return srv.(GossipChunkServiceServer).ChunkAckStream(&grpc.GenericServerStream[GossipChunkAck, GossipChunkAck]{ServerStream: stream})
-}
-
-// This type alias is provided for backwards compatibility with existing code that references the prior non-generic stream type by name.
-type GossipChunkService_ChunkAckStreamServer = grpc.BidiStreamingServer[GossipChunkAck, GossipChunkAck]
+type GossipChunkService_PushChunksServer = grpc.BidiStreamingServer[GossipChunk, GossipChunkAck]
 
 // GossipChunkService_ServiceDesc is the grpc.ServiceDesc for GossipChunkService service.
 // It's only intended for direct use with grpc.RegisterService,
@@ -133,14 +107,8 @@ var GossipChunkService_ServiceDesc = grpc.ServiceDesc{
 	Methods:     []grpc.MethodDesc{},
 	Streams: []grpc.StreamDesc{
 		{
-			StreamName:    "ChunkMessageStream",
-			Handler:       _GossipChunkService_ChunkMessageStream_Handler,
-			ServerStreams: true,
-			ClientStreams: true,
-		},
-		{
-			StreamName:    "ChunkAckStream",
-			Handler:       _GossipChunkService_ChunkAckStream_Handler,
+			StreamName:    "PushChunks",
+			Handler:       _GossipChunkService_PushChunks_Handler,
 			ServerStreams: true,
 			ClientStreams: true,
 		},
