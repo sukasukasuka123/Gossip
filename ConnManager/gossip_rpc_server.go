@@ -51,7 +51,7 @@ func (s *GossipChunkServer) PushChunks(
 		if state.received[chunk.ChunkIndex] {
 			stream.Send(&pb.GossipChunkAck{
 				PayloadHash: chunk.PayloadHash,
-				RecvHash:    "node2",
+				RecvHash:    s.NodeHash,
 				SessionID:   chunk.SessionID,
 				ChunkIndex:  chunk.ChunkIndex,
 				Status:      pb.AckStatus_ACK_DUPLICATE,
