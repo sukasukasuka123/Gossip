@@ -10,7 +10,7 @@ type SlidingWindowManager[T comparable] struct {
 	cacheList []string     // 维持顺序
 	mu        sync.Mutex
 
-	windowChan chan T // 滑动窗口通道
+	windowChan chan struct{} // 只作为窗口 token
 	maxWindow  int
 }
 
@@ -19,7 +19,7 @@ func NewSlidingWindowManager[T comparable](windowSize int) *SlidingWindowManager
 	return &SlidingWindowManager[T]{
 		cacheMap:   make(map[string]T),
 		cacheList:  make([]string, 0),
-		windowChan: make(chan T, windowSize),
+		windowChan: make(chan struct{}, windowSize),
 		maxWindow:  windowSize,
 	}
 }

@@ -1,6 +1,5 @@
 package ConnManager
 
-// 这是neighbor slot模块，负责管理与单个邻居节点的连接和通信
 import (
 	"context"
 	"fmt"
@@ -20,6 +19,7 @@ type NeighborSlot struct {
 	lastAlive time.Time
 
 	slidingWindow *SlidingWindow.SlidingWindowManager[*pb.GossipChunk]
+	inFlight      map[string]*pb.GossipChunk
 }
 
 func NewNeighborSlot(
@@ -28,40 +28,72 @@ func NewNeighborSlot(
 	windowSize int,
 	cancel func(),
 ) *NeighborSlot {
-	slidingWindow := *SlidingWindow.NewSlidingWindowManager[*pb.GossipChunk](windowSize)
-	return &NeighborSlot{
+	s := &NeighborSlot{
 		neighborID:    id,
 		stream:        stream,
 		cancel:        cancel,
-		slidingWindow: &slidingWindow,
+		slidingWindow: SlidingWindow.NewSlidingWindowManager[*pb.GossipChunk](windowSize),
+		inFlight:      make(map[string]*pb.GossipChunk),
 		lastAlive:     time.Now(),
 	}
+	return s
 }
 
-func (s *NeighborSlot) ReadySendMsg(
-	ctx context.Context,
-	chunks []*pb.GossipChunk,
-) {
-	// 1. 把所有 chunk 推入滑动窗口的缓存
+// ReadySendMsg 统一推入 neighbor 窗口
+func (s *NeighborSlot) ReadySendMsg(ctx context.Context, chunks []*pb.GossipChunk) {
 	for _, chunk := range chunks {
-		// 这里用 PayloadHash + ChunkIndex 作为唯一 key
 		key := chunk.PayloadHash + ":" + fmt.Sprint(chunk.ChunkIndex)
 		s.slidingWindow.PushResource(key, chunk)
 	}
 
-	// 2. 启动滑动窗口资源调度
-	go s.slidingWindow.ResourceManage(ctx, func(chunk *pb.GossipChunk) {
-		// 真正的出队处理：发包
-		err := s.SendChunk(chunk)
-		if err != nil {
-			// 这里先不复杂化：失败直接断链
-			// 之后可以演进为重试 / 退回缓存 / 降级
+	go s.slidingWindow.ResourceManage(ctx, func(key string, chunk *pb.GossipChunk) {
+		s.mu.Lock()
+		s.inFlight[key] = chunk
+		s.mu.Unlock()
+
+		if err := s.SendChunk(chunk); err != nil {
 			s.cancel()
-			return
 		}
 	})
 }
 
+// HandleAck 收到 ACK 时释放 in-flight 并释放窗口 slot
+func (s *NeighborSlot) HandleAck(ack *pb.GossipChunkAck) {
+	key := ack.PayloadHash + ":" + fmt.Sprint(ack.ChunkIndex)
+
+	s.mu.Lock()
+	_, exists := s.inFlight[key]
+	if exists {
+		delete(s.inFlight, key)
+	}
+	s.mu.Unlock()
+
+	if exists {
+		s.slidingWindow.Release()
+	}
+}
+
+// StartRecvAck 循环接收 ACK
+func (s *NeighborSlot) StartRecvAck(ctx context.Context) {
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+			}
+
+			ack, err := s.stream.Recv()
+			if err != nil {
+				s.cancel()
+				return
+			}
+			s.HandleAck(ack)
+		}
+	}()
+}
+
+// SendChunk 发送 chunk
 func (s *NeighborSlot) SendChunk(chunk *pb.GossipChunk) error {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -73,13 +105,13 @@ func (s *NeighborSlot) SendChunk(chunk *pb.GossipChunk) error {
 	return err
 }
 
+// StartHeartbeat 心跳检查
 func (s *NeighborSlot) StartHeartbeat() {
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
 		defer ticker.Stop()
 
 		for range ticker.C {
-			// 这里只做状态维护，不一定真的发包
 			if time.Since(s.lastAlive) > 30*time.Second {
 				s.cancel()
 				return
