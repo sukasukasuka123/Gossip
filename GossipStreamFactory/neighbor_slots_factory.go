@@ -42,7 +42,7 @@ func (f *NeighborStreamFactory) GetOrCreate(
 		return nil, err
 	}
 
-	slot := ConnManager.NewNeighborSlot(neighborID, stream, cancel)
+	slot := ConnManager.NewNeighborSlot(neighborID, stream, 15, cancel)
 	f.slots[neighborID] = slot
 	slot.StartHeartbeat()
 
