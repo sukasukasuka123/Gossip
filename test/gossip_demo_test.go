@@ -1,410 +1,224 @@
 package test
 
 import (
-	"context"
-	"fmt"
-	"net/http"
-	_ "net/http/pprof"
-	"sync"
-	"sync/atomic"
+	"bytes"
 	"testing"
 	"time"
 
-	"github.com/sukasukasuka123/Gossip/GossipStreamFactory"
-	"github.com/sukasukasuka123/Gossip/Logger"
-	"github.com/sukasukasuka123/Gossip/NeighborManage"
-	"github.com/sukasukasuka123/Gossip/NodeManage"
-	"github.com/sukasukasuka123/Gossip/Router"
-	"github.com/sukasukasuka123/Gossip/Storage"
-	"github.com/sukasukasuka123/Gossip/StorageManage"
-	pb "github.com/sukasukasuka123/Gossip/gossip_rpc/proto"
+	"github.com/sukasukasuka123/Gossip/NodeManage" // 替换为你的实际包路径
 )
 
-func init() {
-	go func() {
-		http.ListenAndServe("localhost:6060", nil)
-	}()
-}
-
-// =======================
-// Go 里的 static 等价物
-// =======================
-
-var globalNodeID int64 = 0
-
-func nextNodeID() int64 {
-	return atomic.AddInt64(&globalNodeID, 1)
-}
-
-// =======================
-// 默认节点工厂函数
-// =======================
-
-// newDefaultNode
-// - 不改你任何 Node 结构
-// - 不隐藏端口（避免 benchmark 冲突）
-// - 自动生成 nodeHash
-func newDefaultNode(
-	factory *GossipStreamFactory.DoubleStreamFactory,
-	port string,
-	storageSlots int64,
-	storageTTL time.Duration,
-) (*NodeManage.DoubleStreamNode, string) {
-
-	id := nextNodeID()
-	nodeHash := fmt.Sprintf("node-%d", id)
-
-	store := NeighborManage.NewMemoryNeighborStore()
-	logger := Logger.NewLogger()
-	router := Router.NewFanoutRouter()
-	smgr := StorageManage.NewStorageManage(
-		Storage.NewLocalStorage(storageSlots, storageTTL),
-	)
-
-	node := NodeManage.NewDoubleStreamNode(
-		nodeHash,
-		router,
-		logger,
-		store,
-		factory,
-		smgr,
-	)
-
-	if err := node.StartGRPCServer(port); err != nil {
-		panic(fmt.Sprintf("failed to start gRPC server on %s: %v", port, err))
-	}
-
-	return node, nodeHash
-}
-func BenchmarkTwoNodesMessaging(b *testing.B) {
-	factory := GossipStreamFactory.NewDoubleStreamFactory(30 * time.Second)
-	defer factory.CloseAll()
-
-	node1, node1Hash := newDefaultNode(factory, ":50051", 4, 100*time.Second)
-	defer node1.StopGRPC()
-
-	node2, node2Hash := newDefaultNode(factory, ":50052", 4, 100*time.Second)
-	defer node2.StopGRPC()
-
-	time.Sleep(500 * time.Millisecond)
-
-	if err := node1.ConnectToNeighbor(NeighborManage.NeighborInfo{
-		NodeHash: node2Hash,
-		Endpoint: "localhost:50052",
-		Online:   true,
-	}); err != nil {
-		b.Fatalf("Node1 connect failed: %v", err)
-	}
-
-	if err := node2.ConnectToNeighbor(NeighborManage.NeighborInfo{
-		NodeHash: node1Hash,
-		Endpoint: "localhost:50051",
-		Online:   true,
-	}); err != nil {
-		b.Fatalf("Node2 connect failed: %v", err)
-	}
-
-	time.Sleep(500 * time.Millisecond)
-	b.ResetTimer()
+// 1. 测试节点创建和启动的性能
+func BenchmarkNodeCreation(b *testing.B) {
+	b.ReportAllocs()
 
 	for i := 0; i < b.N; i++ {
-		msg := &pb.GossipMessage{
-			Hash:     fmt.Sprintf("msg-%d", i),
-			FromHash: node1Hash,
-			PayLoad:  []byte(fmt.Sprintf("test payload %d", i)),
-		}
+		cfg := NodeManage.DefaultNodeConfig()
+		cfg.Port = 7000 + i%1000 // 避免端口冲突
 
-		if err := node1.SendMessage(node2Hash, msg); err != nil {
-			b.Errorf("send failed: %v", err)
-		}
-
-		select {
-		case completedHash := <-node1.MM.CompleteChan:
-			if completedHash != msg.Hash {
-				b.Fatalf("ACK mismatch: got %s want %s", completedHash, msg.Hash)
-			}
-		case <-time.After(10 * time.Second):
-			b.Fatalf("timeout waiting for ACK")
-		}
+		node := NodeManage.NewChunkNode(cfg)
+		_ = node.Start()
+		node.Stop()
 	}
-
-	b.StopTimer()
-}
-func BenchmarkBidirectionalMessaging(b *testing.B) {
-	factory := GossipStreamFactory.NewDoubleStreamFactory(30 * time.Second)
-	defer factory.CloseAll()
-
-	node1, node1Hash := newDefaultNode(factory, ":50051", 40, 100*time.Second)
-	defer node1.StopGRPC()
-
-	node2, node2Hash := newDefaultNode(factory, ":50052", 40, 100*time.Second)
-	defer node2.StopGRPC()
-
-	time.Sleep(500 * time.Millisecond)
-
-	_ = node1.ConnectToNeighbor(NeighborManage.NeighborInfo{
-		NodeHash: node2Hash,
-		Endpoint: "localhost:50052",
-		Online:   true,
-	})
-	_ = node2.ConnectToNeighbor(NeighborManage.NeighborInfo{
-		NodeHash: node1Hash,
-		Endpoint: "localhost:50051",
-		Online:   true,
-	})
-
-	time.Sleep(500 * time.Millisecond)
-	b.ResetTimer()
-
-	var wg sync.WaitGroup
-	wg.Add(2)
-
-	go func() {
-		defer wg.Done()
-		for i := 0; i < b.N/2; i++ {
-			msg := &pb.GossipMessage{
-				Hash:     fmt.Sprintf("node1-msg-%d", i),
-				FromHash: node1Hash,
-				PayLoad:  []byte("from node1"),
-			}
-			_ = node1.SendMessage(node2Hash, msg)
-		}
-	}()
-
-	go func() {
-		defer wg.Done()
-		for i := 0; i < b.N/2; i++ {
-			msg := &pb.GossipMessage{
-				Hash:     fmt.Sprintf("node2-msg-%d", i),
-				FromHash: node2Hash,
-				PayLoad:  []byte("from node2"),
-			}
-			_ = node2.SendMessage(node1Hash, msg)
-		}
-	}()
-
-	wg.Wait()
-}
-func TestTwoNodesBasicCommunication(t *testing.T) {
-	factory := GossipStreamFactory.NewDoubleStreamFactory(30 * time.Second)
-	defer factory.CloseAll()
-
-	node1, node1Hash := newDefaultNode(factory, ":50051", 40, 100*time.Second)
-	defer node1.StopGRPC()
-
-	node2, node2Hash := newDefaultNode(factory, ":50052", 40, 100*time.Second)
-	defer node2.StopGRPC()
-
-	time.Sleep(500 * time.Millisecond)
-
-	_ = node1.ConnectToNeighbor(NeighborManage.NeighborInfo{
-		NodeHash: node2Hash,
-		Endpoint: "localhost:50052",
-		Online:   true,
-	})
-	_ = node2.ConnectToNeighbor(NeighborManage.NeighborInfo{
-		NodeHash: node1Hash,
-		Endpoint: "localhost:50051",
-		Online:   true,
-	})
-
-	time.Sleep(500 * time.Millisecond)
-
-	const numMessages = 15000
-	for i := 0; i < numMessages; i++ {
-		msg := &pb.GossipMessage{
-			Hash:     fmt.Sprintf("test-msg-%d", i),
-			FromHash: node1Hash,
-			PayLoad:  []byte("hello"),
-		}
-		_ = node1.SendMessage(node2Hash, msg)
-	}
-
-	timeout := time.After(20 * time.Second)
-	received := 0
-
-	for received < numMessages {
-		select {
-		case <-node1.MM.CompleteChan:
-			received++
-		case <-timeout:
-			t.Fatalf("timeout: got %d/%d ACKs", received, numMessages)
-		}
-	}
-
-	t.Logf("All %d messages ACKed", numMessages)
 }
 
-func BenchmarkMultiNodeLargeMessage(b *testing.B) {
-	const (
-		nodeCount       = 4          // 节点数量（？>=3）
-		messagesPerPeer = 30         // 每个节点给每个邻居发 ？ 条
-		payloadSize     = 512 * 1024 // ？KB
-		basePort        = 51000
-		storageSlots    = 200
-		storageTTL      = 120 * time.Second
-	)
+// 2. 测试建立连接的性能
+func BenchmarkNodeConnection(b *testing.B) {
+	// 准备两个固定节点
+	cfgA := NodeManage.DefaultNodeConfig()
+	cfgA.Port = 8001
+	cfgB := NodeManage.DefaultNodeConfig()
+	cfgB.Port = 8002
 
-	factory := GossipStreamFactory.NewDoubleStreamFactory(60 * time.Second)
-	defer factory.CloseAll()
+	nodeA := NodeManage.NewChunkNode(cfgA)
+	nodeB := NodeManage.NewChunkNode(cfgB)
 
-	// ==========================
-	// 1. 创建节点
-	// ==========================
+	_ = nodeA.Start()
+	_ = nodeB.Start()
+	defer nodeB.Stop()
+	defer nodeA.Stop()
 
-	nodes := make([]*NodeManage.DoubleStreamNode, 0, nodeCount)
-	nodeHashes := make([]string, 0, nodeCount)
-	ports := make([]string, 0, nodeCount)
-
-	for i := 0; i < nodeCount; i++ {
-		port := fmt.Sprintf(":%d", basePort+i)
-		node, hash := newDefaultNode(factory, port, storageSlots, storageTTL)
-
-		nodes = append(nodes, node)
-		nodeHashes = append(nodeHashes, hash)
-		ports = append(ports, port)
-	}
-
-	defer func() {
-		for _, n := range nodes {
-			n.StopGRPC()
-		}
-	}()
-
-	time.Sleep(800 * time.Millisecond)
-
-	// ==========================
-	// 2. 全互连
-	// ==========================
-
-	for i := 0; i < nodeCount; i++ {
-		for j := 0; j < nodeCount; j++ {
-			if i == j {
-				continue
-			}
-
-			err := nodes[i].ConnectToNeighbor(NeighborManage.NeighborInfo{
-				NodeHash: nodeHashes[j],
-				Endpoint: "localhost" + ports[j],
-				Online:   true,
-			})
-			if err != nil {
-				b.Fatalf("connect failed: %v", err)
-			}
-		}
-	}
-
-	time.Sleep(800 * time.Millisecond)
-
-	// ==========================
-	// 3. 准备大 payload
-	// ==========================
-
-	largePayload := make([]byte, payloadSize)
-	for i := range largePayload {
-		largePayload[i] = byte(i % 251)
-	}
-
-	totalMessages := nodeCount * (nodeCount - 1) * messagesPerPeer
-	b.Logf(
-		"Multi-node large message benchmark: nodes=%d, payload=%dKB, totalMessages=%d",
-		nodeCount,
-		payloadSize/1024,
-		totalMessages,
-	)
-
-	// ==========================
-	// 4. 开始压测
-	// ==========================
+	time.Sleep(100 * time.Millisecond) // 等待节点就绪
 
 	b.ResetTimer()
+	b.ReportAllocs()
 
-	var wgSend sync.WaitGroup
-	wgSend.Add(nodeCount)
-
-	for i := 0; i < nodeCount; i++ {
-		go func(senderIdx int) {
-			defer wgSend.Done()
-
-			sender := nodes[senderIdx]
-			senderHash := nodeHashes[senderIdx]
-
-			// ← 对每个邻居也并发发送
-			var wgPeer sync.WaitGroup
-			for j := 0; j < nodeCount; j++ {
-				if senderIdx == j {
-					continue
-				}
-
-				wgPeer.Add(1)
-				go func(peerIdx int) {
-					defer wgPeer.Done()
-					receiverHash := nodeHashes[peerIdx]
-
-					// 向这个邻居串行发送 30 条
-					for k := 0; k < messagesPerPeer; k++ {
-						msgHash := fmt.Sprintf("large-%s-to-%s-%d",
-							senderHash, receiverHash, k)
-
-						msg := &pb.GossipMessage{
-							Hash:     msgHash,
-							FromHash: senderHash,
-							PayLoad:  largePayload,
-						}
-
-						if err := sender.SendMessage(receiverHash, msg); err != nil {
-							b.Errorf("send failed: %v", err)
-						}
-					}
-				}(j)
-			}
-			wgPeer.Wait()
-		}(i)
+	for i := 0; i < b.N; i++ {
+		// 测试连接建立（注意：多次连接到同一节点可能需要你的代码支持重连逻辑）
+		_ = nodeA.ConnectToNeighbor("127.0.0.1", 8002)
 	}
-
-	wgSend.Wait()
-	// ==========================
-	// 5. 等待所有 ACK
-	// ==========================
-
-	ctx, cancel := context.WithTimeout(context.Background(), 60*time.Second)
-	defer cancel()
-
-	ackReceived := int32(0)
-
-	var wgAck sync.WaitGroup
-	wgAck.Add(nodeCount)
-
-	for i := 0; i < nodeCount; i++ {
-		go func(idx int) {
-			defer wgAck.Done()
-			node := nodes[idx]
-
-			for {
-				select {
-				case <-node.MM.CompleteChan:
-					if atomic.AddInt32(&ackReceived, 1) >= int32(totalMessages) {
-						cancel() // 收到足够的 ACK 后立即取消
-						return
-					}
-				case <-ctx.Done():
-					return
-				}
-			}
-		}(i)
-	}
-
-	// 等待完成
-	wgAck.Wait()
-	cancel() // 确保取消
-
-	final := atomic.LoadInt32(&ackReceived)
-	if final < int32(totalMessages) {
-		b.Fatalf("ACK incomplete: received %d / %d", final, totalMessages)
-	}
-
-	b.Logf("All ACKs received: %d", final)
-	b.StopTimer()
 }
 
-// 缓存穿透、缓存雪崩……面试人很喜欢问
+// 3. 测试单次消息发送的性能（点对点）
+func BenchmarkSingleMessageSend(b *testing.B) {
+	cfgA := NodeManage.DefaultNodeConfig()
+	cfgA.Port = 9001
+	cfgB := NodeManage.DefaultNodeConfig()
+	cfgB.Port = 9002
+
+	nodeA := NodeManage.NewChunkNode(cfgA)
+	nodeB := NodeManage.NewChunkNode(cfgB)
+
+	_ = nodeA.Start()
+	_ = nodeB.Start()
+	defer nodeB.Stop()
+	defer nodeA.Stop()
+
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 9002)
+	time.Sleep(200 * time.Millisecond)
+
+	payload := bytes.Repeat([]byte("TEST_DATA"), 128) // 1KB左右的数据
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		nodeA.BroadcastMessage(payload)
+	}
+}
+
+// 4. 测试广播性能（小消息）
+func BenchmarkBroadcastSmallMessage(b *testing.B) {
+	cfgA := NodeManage.DefaultNodeConfig()
+	cfgA.Port = 10001
+	cfgB := NodeManage.DefaultNodeConfig()
+	cfgB.Port = 10002
+	cfgC := NodeManage.DefaultNodeConfig()
+	cfgC.Port = 10003
+
+	nodeA := NodeManage.NewChunkNode(cfgA)
+	nodeB := NodeManage.NewChunkNode(cfgB)
+	nodeC := NodeManage.NewChunkNode(cfgC)
+
+	_ = nodeA.Start()
+	_ = nodeB.Start()
+	_ = nodeC.Start()
+	defer nodeB.Stop()
+	defer nodeC.Stop()
+	defer nodeA.Stop()
+
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 10002)
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 10003)
+	time.Sleep(200 * time.Millisecond)
+
+	payload := []byte("SMALL_MESSAGE") // 小消息
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		nodeA.BroadcastMessage(payload)
+	}
+}
+
+// 5. 测试广播性能（大消息）
+func BenchmarkBroadcastLargeMessage(b *testing.B) {
+	cfgA := NodeManage.DefaultNodeConfig()
+	cfgA.Port = 11001
+	cfgB := NodeManage.DefaultNodeConfig()
+	cfgB.Port = 11002
+	cfgC := NodeManage.DefaultNodeConfig()
+	cfgC.Port = 11003
+
+	nodeA := NodeManage.NewChunkNode(cfgA)
+	nodeB := NodeManage.NewChunkNode(cfgB)
+	nodeC := NodeManage.NewChunkNode(cfgC)
+
+	_ = nodeA.Start()
+	_ = nodeB.Start()
+	_ = nodeC.Start()
+	defer nodeB.Stop()
+	defer nodeC.Stop()
+	defer nodeA.Stop()
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 11002)
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 11003)
+	time.Sleep(200 * time.Millisecond)
+
+	payload := bytes.Repeat([]byte("LARGE_DATA"), 1024) // 10KB左右的数据
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		nodeA.BroadcastMessage(payload)
+	}
+}
+
+// 6. 测试并发广播性能（限制2核心）
+func BenchmarkChunkGossip_Realistic(b *testing.B) {
+	// 设置只使用2个CPU核心
+	b.SetParallelism(2)
+
+	cfgA := NodeManage.DefaultNodeConfig()
+	cfgA.Port = 6001
+	cfgB := NodeManage.DefaultNodeConfig()
+	cfgB.Port = 6002
+	cfgC := NodeManage.DefaultNodeConfig()
+	cfgC.Port = 6003
+
+	nodeA := NodeManage.NewChunkNode(cfgA)
+	nodeB := NodeManage.NewChunkNode(cfgB)
+	nodeC := NodeManage.NewChunkNode(cfgC)
+
+	_ = nodeA.Start()
+	_ = nodeB.Start()
+	_ = nodeC.Start()
+
+	defer nodeB.Stop()
+	defer nodeC.Stop()
+	defer nodeA.Stop()
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 6002)
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 6003)
+
+	time.Sleep(200 * time.Millisecond)
+
+	payload := bytes.Repeat([]byte("REALISTIC_DATA"), 512) // 7KB左右
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			nodeA.BroadcastMessage(payload)
+		}
+	})
+
+	b.StopTimer()
+
+	statsB := nodeB.GetStats()["messages_received"].(int64)
+	statsC := nodeC.GetStats()["messages_received"].(int64)
+	b.Logf("Total Broadcasts: %d, NodeB Received: %d, NodeC Received: %d", b.N, statsB, statsC)
+}
+
+// 7. 测试多节点场景下的性能（扩展测试）
+func BenchmarkMultiNodeBroadcast(b *testing.B) {
+	nodeCount := 5
+	nodes := make([]*NodeManage.ChunkNode, nodeCount)
+	basePort := 12001
+
+	// 创建并启动所有节点
+	for i := 0; i < nodeCount; i++ {
+		cfg := NodeManage.DefaultNodeConfig()
+		cfg.Port = basePort + i
+		nodes[i] = NodeManage.NewChunkNode(cfg)
+		_ = nodes[i].Start()
+	}
+	for i := nodeCount - 1; i >= 0; i-- {
+		defer nodes[i].Stop()
+	}
+	// 将所有节点连接到第一个节点（星型拓扑）
+	for i := 1; i < nodeCount; i++ {
+		_ = nodes[0].ConnectToNeighbor("127.0.0.1", basePort+i)
+	}
+
+	time.Sleep(300 * time.Millisecond)
+
+	payload := bytes.Repeat([]byte("MULTI_NODE"), 256)
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		nodes[0].BroadcastMessage(payload)
+	}
+}

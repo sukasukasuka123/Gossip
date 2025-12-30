@@ -4,20 +4,43 @@ import "google/protobuf/empty.proto";
 option go_package = "github.com/sukasukasuka123/Gossip/proto/gossip_rpc_chunk";
 // 分块消息
 message GossipChunk {
-    string Hash = 1;
-    string FromHash = 2;
-    bytes Chunk = 3;
-    int32 ChunkIndex = 4;
-    int32 TotalChunks = 5;
+    // 原始消息的哈希值（不是分片的哈希值）
+    string PayloadHash = 1;
+    // 发送者的哈希值
+    string SenderHash = 2;
+    // 发送的次数
+    int32 sessionID = 3;
+    // 分片数据
+    bytes ChunkData = 4;
+    // 分片索引
+    int32 ChunkIndex = 5;
+    // 总分片数
+    int32 TotalChunks = 6;
 }
 
 message GossipChunkAck{
-    string Hash = 1;
-    string FromHash = 2;
-    int32 ChunkIndex = 3;
+    // 原始消息的哈希值（不是分片的哈希值）
+    string PayloadHash = 1;
+    // 接收者的哈希值
+    string RecvHash = 2;
+    // 发送的次数
+    int32 sessionID = 3;
+    // 确认的分片索引
+    int32 ChunkIndex = 4;
+    // 接收状态
+    AckStatus Status = 5;
+
 }
+
+enum AckStatus {
+    ACK_UNKNOWN = 0;   // 保留
+    ACK_OK = 1;        // 正常收到
+    ACK_DUPLICATE = 2; // 已收到过（去重命中）
+    ACK_COMPLETE = 3;  // 所有 chunk 接收完成
+    ACK_REJECT = 4;    // 拒绝接收（资源/策略）
+}
+
 service GossipChunkService {
     // 分块消息流
-    rpc ChunkMessageStream(stream GossipChunk) returns (stream GossipChunk);
-    rpc ChunkAckStream(stream GossipChunkAck) returns (stream GossipChunkAck);
+    rpc PushChunks(stream GossipChunk) returns (stream GossipChunkAck);
 }
