@@ -46,22 +46,25 @@ func NewNeighborSlot(
 }
 
 func (s *NeighborSlot) runSlidingWindow() {
-	s.window.ResourceManage(s.ctx, func(key string, chunk *pb.GossipChunk) {
-		select {
-		case <-s.ctx.Done():
-			return
-		default:
+	s.window.ResourceManageBatch(s.ctx, func(batch map[string]*pb.GossipChunk) {
+		for key, chunk := range batch {
+			if err := s.stream.Send(chunk); err != nil {
+				s.cancel()
+				return
+			}
+			s.inFlight.Store(key, struct{}{})
+			s.touchAlive()
 		}
+	}, 8) // 每次批量 8 条
+}
 
-		s.inFlight.Store(key, struct{}{})
-
-		if err := s.stream.Send(chunk); err != nil {
-			s.cancel()
-			return
+func (s *NeighborSlot) HandleAckBatch(acks []*pb.GossipChunkAck) {
+	for _, ack := range acks {
+		key := fmt.Sprintf("%s:%d", ack.PayloadHash, ack.ChunkIndex)
+		if _, ok := s.inFlight.LoadAndDelete(key); ok {
+			s.window.ReleaseBatch(1) // 或 ReleaseBatch(1)
 		}
-
-		s.touchAlive()
-	})
+	}
 }
 
 func (s *NeighborSlot) ReadySendMsg(chunks []*pb.GossipChunk) {
@@ -75,7 +78,7 @@ func (s *NeighborSlot) HandleAck(ack *pb.GossipChunkAck) {
 	key := fmt.Sprintf("%s:%d", ack.PayloadHash, ack.ChunkIndex)
 
 	if _, ok := s.inFlight.LoadAndDelete(key); ok {
-		s.window.Release()
+		s.window.ReleaseBatch(1)
 	}
 }
 

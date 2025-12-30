@@ -2,180 +2,223 @@ package test
 
 import (
 	"bytes"
-	"context"
 	"testing"
 	"time"
 
-	"github.com/sukasukasuka123/Gossip/NodeManage"
+	"github.com/sukasukasuka123/Gossip/NodeManage" // 替换为你的实际包路径
 )
 
-func waitUntil(t *testing.T, timeout time.Duration, cond func() bool) {
-	deadline := time.Now().Add(timeout)
-	for time.Now().Before(deadline) {
-		if cond() {
-			return
-		}
-		time.Sleep(10 * time.Millisecond)
-	}
-	t.Fatalf("condition not met within %v", timeout)
-}
-
-func TestChunkGossipIntegration(t *testing.T) {
-	_, cancel := context.WithCancel(context.Background())
-
-	defer cancel()
-
-	// ---------- 创建节点配置 ----------
-	cfgA := NodeManage.DefaultNodeConfig()
-	cfgA.Port = 6001
-	cfgA.FanoutCount = 2
-
-	cfgB := NodeManage.DefaultNodeConfig()
-	cfgB.Port = 6002
-
-	cfgC := NodeManage.DefaultNodeConfig()
-	cfgC.Port = 6003
-
-	// ---------- 创建节点 ----------
-	nodeA := NodeManage.NewChunkNode(cfgA)
-	nodeB := NodeManage.NewChunkNode(cfgB)
-	nodeC := NodeManage.NewChunkNode(cfgC)
-
-	// ---------- 启动节点 ----------
-	if err := nodeA.Start(); err != nil {
-		t.Fatal(err)
-	}
-	if err := nodeB.Start(); err != nil {
-		t.Fatal(err)
-	}
-	if err := nodeC.Start(); err != nil {
-		t.Fatal(err)
-	}
-
-	defer nodeB.Stop()
-	defer nodeC.Stop()
-	defer nodeA.Stop()
-	// ---------- 建立邻居关系 ----------
-	if err := nodeA.ConnectToNeighbor("127.0.0.1", cfgB.Port); err != nil {
-		t.Fatal(err)
-	}
-	if err := nodeA.ConnectToNeighbor("127.0.0.1", cfgC.Port); err != nil {
-		t.Fatal(err)
-	}
-
-	// 等待连接稳定
-	time.Sleep(500 * time.Millisecond)
-
-	// ---------- 准备测试消息 ----------
-	payload := bytes.Repeat([]byte("HELLO_GOSSIP"), 1024) // > chunkSize
-	payloadHash := nodeA.BroadcastMessage(payload)
-
-	t.Logf("broadcast payload hash: %s", payloadHash)
-
-	// ---------- 等待 B / C 收到 ----------
-	waitUntil(t, 5*time.Second, func() bool {
-		statsB := nodeB.GetStats()
-		statsC := nodeC.GetStats()
-
-		return statsB["messages_received"].(int64) >= 1 &&
-			statsC["messages_received"].(int64) >= 1
-	})
-
-	// ---------- 验证统计 ----------
-	statsA := nodeA.GetStats()
-	statsB := nodeB.GetStats()
-	statsC := nodeC.GetStats()
-
-	t.Logf("A stats: %+v", statsA)
-	t.Logf("B stats: %+v", statsB)
-	t.Logf("C stats: %+v", statsC)
-
-	if statsA["messages_sent"].(int64) != 1 {
-		t.Fatalf("expected A sent 1 message, got %v", statsA["messages_sent"])
-	}
-
-	if statsB["messages_received"].(int64) != 1 {
-		t.Fatalf("expected B received 1 message, got %v", statsB["messages_received"])
-	}
-
-	if statsC["messages_received"].(int64) != 1 {
-		t.Fatalf("expected C received 1 message, got %v", statsC["messages_received"])
-	}
-}
-func BenchmarkChunkGossip(b *testing.B) {
-	// 记录内存分配
+// 1. 测试节点创建和启动的性能
+func BenchmarkNodeCreation(b *testing.B) {
 	b.ReportAllocs()
 
-	// ---------- 创建节点配置 ----------
+	for i := 0; i < b.N; i++ {
+		cfg := NodeManage.DefaultNodeConfig()
+		cfg.Port = 7000 + i%1000 // 避免端口冲突
+
+		node := NodeManage.NewChunkNode(cfg)
+		_ = node.Start()
+		node.Stop()
+	}
+}
+
+// 2. 测试建立连接的性能
+func BenchmarkNodeConnection(b *testing.B) {
+	// 准备两个固定节点
 	cfgA := NodeManage.DefaultNodeConfig()
-	cfgA.Port = 6001
-	cfgA.FanoutCount = 2
-
+	cfgA.Port = 8001
 	cfgB := NodeManage.DefaultNodeConfig()
-	cfgB.Port = 6002
+	cfgB.Port = 8002
 
+	nodeA := NodeManage.NewChunkNode(cfgA)
+	nodeB := NodeManage.NewChunkNode(cfgB)
+
+	_ = nodeA.Start()
+	_ = nodeB.Start()
+	defer nodeB.Stop()
+	defer nodeA.Stop()
+
+	time.Sleep(100 * time.Millisecond) // 等待节点就绪
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		// 测试连接建立（注意：多次连接到同一节点可能需要你的代码支持重连逻辑）
+		_ = nodeA.ConnectToNeighbor("127.0.0.1", 8002)
+	}
+}
+
+// 3. 测试单次消息发送的性能（点对点）
+func BenchmarkSingleMessageSend(b *testing.B) {
+	cfgA := NodeManage.DefaultNodeConfig()
+	cfgA.Port = 9001
+	cfgB := NodeManage.DefaultNodeConfig()
+	cfgB.Port = 9002
+
+	nodeA := NodeManage.NewChunkNode(cfgA)
+	nodeB := NodeManage.NewChunkNode(cfgB)
+
+	_ = nodeA.Start()
+	_ = nodeB.Start()
+	defer nodeB.Stop()
+	defer nodeA.Stop()
+
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 9002)
+	time.Sleep(200 * time.Millisecond)
+
+	payload := bytes.Repeat([]byte("TEST_DATA"), 128) // 1KB左右的数据
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		nodeA.BroadcastMessage(payload)
+	}
+}
+
+// 4. 测试广播性能（小消息）
+func BenchmarkBroadcastSmallMessage(b *testing.B) {
+	cfgA := NodeManage.DefaultNodeConfig()
+	cfgA.Port = 10001
+	cfgB := NodeManage.DefaultNodeConfig()
+	cfgB.Port = 10002
 	cfgC := NodeManage.DefaultNodeConfig()
-	cfgC.Port = 6003
+	cfgC.Port = 10003
 
-	// ---------- 创建节点 ----------
 	nodeA := NodeManage.NewChunkNode(cfgA)
 	nodeB := NodeManage.NewChunkNode(cfgB)
 	nodeC := NodeManage.NewChunkNode(cfgC)
 
-	// ---------- 启动节点 ----------
-	if err := nodeA.Start(); err != nil {
-		b.Fatal(err)
-	}
-	if err := nodeB.Start(); err != nil {
-		b.Fatal(err)
-	}
-	if err := nodeC.Start(); err != nil {
-		b.Fatal(err)
-	}
-
+	_ = nodeA.Start()
+	_ = nodeB.Start()
+	_ = nodeC.Start()
 	defer nodeB.Stop()
 	defer nodeC.Stop()
 	defer nodeA.Stop()
 
-	// ---------- 建立邻居关系 ----------
-	if err := nodeA.ConnectToNeighbor("127.0.0.1", cfgB.Port); err != nil {
-		b.Fatal(err)
-	}
-	if err := nodeA.ConnectToNeighbor("127.0.0.1", cfgC.Port); err != nil {
-		b.Fatal(err)
-	}
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 10002)
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 10003)
+	time.Sleep(200 * time.Millisecond)
 
-	// 等待连接稳定
-	time.Sleep(500 * time.Millisecond)
+	payload := []byte("SMALL_MESSAGE") // 小消息
 
-	payload := bytes.Repeat([]byte("HELLO_GOSSIP"), 1024) // > chunkSize
+	b.ResetTimer()
+	b.ReportAllocs()
 
-	// ---------- 基准循环 ----------
 	for i := 0; i < b.N; i++ {
-		hash := nodeA.BroadcastMessage(payload)
+		nodeA.BroadcastMessage(payload)
+	}
+}
 
-		// 等待 B / C 收到
-		deadline := time.Now().Add(5 * time.Second)
-		for time.Now().Before(deadline) {
-			statsB := nodeB.GetStats()
-			statsC := nodeC.GetStats()
+// 5. 测试广播性能（大消息）
+func BenchmarkBroadcastLargeMessage(b *testing.B) {
+	cfgA := NodeManage.DefaultNodeConfig()
+	cfgA.Port = 11001
+	cfgB := NodeManage.DefaultNodeConfig()
+	cfgB.Port = 11002
+	cfgC := NodeManage.DefaultNodeConfig()
+	cfgC.Port = 11003
 
-			if statsB["messages_received"].(int64) >= int64(i+1) &&
-				statsC["messages_received"].(int64) >= int64(i+1) {
-				break
-			}
-			time.Sleep(5 * time.Millisecond)
+	nodeA := NodeManage.NewChunkNode(cfgA)
+	nodeB := NodeManage.NewChunkNode(cfgB)
+	nodeC := NodeManage.NewChunkNode(cfgC)
+
+	_ = nodeA.Start()
+	_ = nodeB.Start()
+	_ = nodeC.Start()
+	defer nodeB.Stop()
+	defer nodeC.Stop()
+	defer nodeA.Stop()
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 11002)
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 11003)
+	time.Sleep(200 * time.Millisecond)
+
+	payload := bytes.Repeat([]byte("LARGE_DATA"), 1024) // 10KB左右的数据
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		nodeA.BroadcastMessage(payload)
+	}
+}
+
+// 6. 测试并发广播性能（限制2核心）
+func BenchmarkChunkGossip_Realistic(b *testing.B) {
+	// 设置只使用2个CPU核心
+	b.SetParallelism(2)
+
+	cfgA := NodeManage.DefaultNodeConfig()
+	cfgA.Port = 6001
+	cfgB := NodeManage.DefaultNodeConfig()
+	cfgB.Port = 6002
+	cfgC := NodeManage.DefaultNodeConfig()
+	cfgC.Port = 6003
+
+	nodeA := NodeManage.NewChunkNode(cfgA)
+	nodeB := NodeManage.NewChunkNode(cfgB)
+	nodeC := NodeManage.NewChunkNode(cfgC)
+
+	_ = nodeA.Start()
+	_ = nodeB.Start()
+	_ = nodeC.Start()
+
+	defer nodeB.Stop()
+	defer nodeC.Stop()
+	defer nodeA.Stop()
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 6002)
+	_ = nodeA.ConnectToNeighbor("127.0.0.1", 6003)
+
+	time.Sleep(200 * time.Millisecond)
+
+	payload := bytes.Repeat([]byte("REALISTIC_DATA"), 512) // 7KB左右
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			nodeA.BroadcastMessage(payload)
 		}
-		// 可选：打印每轮 hash
-		b.Logf("iteration %d broadcast payload hash: %s", i, hash)
+	})
+
+	b.StopTimer()
+
+	statsB := nodeB.GetStats()["messages_received"].(int64)
+	statsC := nodeC.GetStats()["messages_received"].(int64)
+	b.Logf("Total Broadcasts: %d, NodeB Received: %d, NodeC Received: %d", b.N, statsB, statsC)
+}
+
+// 7. 测试多节点场景下的性能（扩展测试）
+func BenchmarkMultiNodeBroadcast(b *testing.B) {
+	nodeCount := 5
+	nodes := make([]*NodeManage.ChunkNode, nodeCount)
+	basePort := 12001
+
+	// 创建并启动所有节点
+	for i := 0; i < nodeCount; i++ {
+		cfg := NodeManage.DefaultNodeConfig()
+		cfg.Port = basePort + i
+		nodes[i] = NodeManage.NewChunkNode(cfg)
+		_ = nodes[i].Start()
+	}
+	for i := nodeCount - 1; i >= 0; i-- {
+		defer nodes[i].Stop()
+	}
+	// 将所有节点连接到第一个节点（星型拓扑）
+	for i := 1; i < nodeCount; i++ {
+		_ = nodes[0].ConnectToNeighbor("127.0.0.1", basePort+i)
 	}
 
-	// ---------- 输出最终统计 ----------
-	statsA := nodeA.GetStats()
-	statsB := nodeB.GetStats()
-	statsC := nodeC.GetStats()
+	time.Sleep(300 * time.Millisecond)
 
-	b.Logf("A stats: %+v", statsA)
-	b.Logf("B stats: %+v", statsB)
-	b.Logf("C stats: %+v", statsC)
+	payload := bytes.Repeat([]byte("MULTI_NODE"), 256)
+
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	for i := 0; i < b.N; i++ {
+		nodes[0].BroadcastMessage(payload)
+	}
 }

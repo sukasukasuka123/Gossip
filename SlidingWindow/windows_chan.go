@@ -2,19 +2,30 @@ package SlidingWindow
 
 import (
 	"context"
-	"sync/atomic"
+	"time"
 )
 
-// Release 由 ACK 调用，显式释放窗口
-func (s *SlidingWindowManager[T]) Release() {
-	select {
-	case <-s.windowChan:
-	default:
+// 批量释放窗口
+func (s *SlidingWindowManager[T]) ReleaseBatch(n int) {
+	for i := 0; i < n; i++ {
+		select {
+		case <-s.windowChan:
+		default:
+			return
+		}
 	}
 }
 
-// ResourceManage：推进缓存，占窗口，然后交给 handler
-func (s *SlidingWindowManager[T]) ResourceManage(ctx context.Context, handler func(key string, resource T)) {
+// ResourceManageBatch 批量处理资源
+func (s *SlidingWindowManager[T]) ResourceManageBatch(
+	ctx context.Context,
+	handler func(batch map[string]T),
+	batchSize int,
+) {
+	if batchSize <= 0 {
+		batchSize = DefaultBatchSize
+	}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -22,28 +33,37 @@ func (s *SlidingWindowManager[T]) ResourceManage(ctx context.Context, handler fu
 		default:
 		}
 
-		// 检查是否有可用窗口
-		if len(s.windowChan) >= s.maxWindow {
+		s.mu.Lock()
+		if len(s.cacheList) == 0 || len(s.windowChan) >= s.maxWindow {
+			s.mu.Unlock()
+			time.Sleep(time.Millisecond) // 避免 CPU 空转
 			continue
 		}
 
-		head := atomic.LoadInt32(&s.head)
-		idx := head % s.maxCap
-		ptr := &s.cacheList[idx]
-		keyPtr := ptr.Swap(nil)
-		if keyPtr == nil {
-			continue
+		// 计算批量大小
+		n := batchSize
+		if n > len(s.cacheList) {
+			n = len(s.cacheList)
+		}
+		if n > (s.maxWindow - len(s.windowChan)) {
+			n = s.maxWindow - len(s.windowChan)
 		}
 
-		atomic.AddInt32(&s.head, 1)
-		s.windowChan <- struct{}{}
+		batch := make(map[string]T, n)
+		for i := 0; i < n; i++ {
+			key := s.cacheList[0]
+			resource := s.cacheMap[key]
 
-		value, ok := s.cacheMap.LoadAndDelete(*keyPtr)
-		if ok {
-			handler(*keyPtr, value.(T))
-		} else {
-			// 防御：map里不存在
-			<-s.windowChan
+			batch[key] = resource
+
+			s.cacheList = s.cacheList[1:]
+			delete(s.cacheMap, key)
+
+			s.windowChan <- struct{}{}
 		}
+		s.mu.Unlock()
+
+		// 上层处理整个批次
+		handler(batch)
 	}
 }
