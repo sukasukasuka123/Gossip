@@ -1,4 +1,3 @@
-// ConnManager/neighbor_slot.go
 package ConnManager
 
 import (
@@ -14,14 +13,15 @@ import (
 type NeighborSlot struct {
 	neighborID string
 	stream     pb.GossipChunkService_PushChunksClient
-	ctx        context.Context
-	cancel     context.CancelFunc
 
-	mu        sync.Mutex
-	lastAlive time.Time
+	ctx    context.Context
+	cancel context.CancelFunc
 
-	slidingWindow *SlidingWindow.SlidingWindowManager[*pb.GossipChunk]
-	inFlight      map[string]*pb.GossipChunk
+	lastAliveMu sync.Mutex
+	lastAlive   time.Time
+
+	window   *SlidingWindow.SlidingWindowManager[*pb.GossipChunk]
+	inFlight sync.Map // key -> struct{}
 }
 
 func NewNeighborSlot(
@@ -33,63 +33,52 @@ func NewNeighborSlot(
 	ctx, cancel := context.WithCancel(parentCtx)
 
 	s := &NeighborSlot{
-		neighborID:    id,
-		stream:        stream,
-		ctx:           ctx,
-		cancel:        cancel,
-		slidingWindow: SlidingWindow.NewSlidingWindowManager[*pb.GossipChunk](windowSize),
-		inFlight:      make(map[string]*pb.GossipChunk),
-		lastAlive:     time.Now(),
+		neighborID: id,
+		stream:     stream,
+		ctx:        ctx,
+		cancel:     cancel,
+		window:     SlidingWindow.NewSlidingWindowManager[*pb.GossipChunk](windowSize),
+		lastAlive:  time.Now(),
 	}
 
-	// ✅ 在初始化时启动唯一的滑动窗口管理协程
 	go s.runSlidingWindow()
-
 	return s
 }
 
-// runSlidingWindow 运行滑动窗口，这个 slot 只会有一个这样的协程
 func (s *NeighborSlot) runSlidingWindow() {
-	s.slidingWindow.ResourceManage(s.ctx, func(key string, chunk *pb.GossipChunk) {
-		// 记录 in-flight
-		s.mu.Lock()
-		s.inFlight[key] = chunk
-		s.mu.Unlock()
-
-		// 发送 chunk
-		if err := s.SendChunk(chunk); err != nil {
-			// 发送失败，关闭整个 slot
-			s.cancel()
+	s.window.ResourceManage(s.ctx, func(key string, chunk *pb.GossipChunk) {
+		select {
+		case <-s.ctx.Done():
+			return
+		default:
 		}
+
+		s.inFlight.Store(key, struct{}{})
+
+		if err := s.stream.Send(chunk); err != nil {
+			s.cancel()
+			return
+		}
+
+		s.touchAlive()
 	})
 }
 
-// ReadySendMsg 只负责将消息的所有 chunks 推入滑动窗口
-// ✅ 不再创建新的协程，只是推送数据
 func (s *NeighborSlot) ReadySendMsg(chunks []*pb.GossipChunk) {
 	for _, chunk := range chunks {
 		key := fmt.Sprintf("%s:%d", chunk.PayloadHash, chunk.ChunkIndex)
-		s.slidingWindow.PushResource(key, chunk)
+		s.window.PushResource(key, chunk)
 	}
 }
 
-// HandleAck 收到 ACK 时释放 in-flight 并释放窗口 slot
 func (s *NeighborSlot) HandleAck(ack *pb.GossipChunkAck) {
 	key := fmt.Sprintf("%s:%d", ack.PayloadHash, ack.ChunkIndex)
 
-	s.mu.Lock()
-	_, exists := s.inFlight[key]
-	if exists {
-		delete(s.inFlight, key)
-	}
-	s.mu.Unlock()
-
-	if exists {
-		s.slidingWindow.Release()
+	if _, ok := s.inFlight.LoadAndDelete(key); ok {
+		s.window.Release()
 	}
 }
 
-// StartRecvAck 循环接收 ACK
 func (s *NeighborSlot) StartRecvAck() {
 	go func() {
 		for {
@@ -109,19 +98,6 @@ func (s *NeighborSlot) StartRecvAck() {
 	}()
 }
 
-// SendChunk 发送 chunk
-func (s *NeighborSlot) SendChunk(chunk *pb.GossipChunk) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
-
-	err := s.stream.Send(chunk)
-	if err == nil {
-		s.lastAlive = time.Now()
-	}
-	return err
-}
-
-// StartHeartbeat 心跳检查
 func (s *NeighborSlot) StartHeartbeat() {
 	go func() {
 		ticker := time.NewTicker(5 * time.Second)
@@ -132,11 +108,11 @@ func (s *NeighborSlot) StartHeartbeat() {
 			case <-s.ctx.Done():
 				return
 			case <-ticker.C:
-				s.mu.Lock()
-				lastAlive := s.lastAlive
-				s.mu.Unlock()
+				s.lastAliveMu.Lock()
+				last := s.lastAlive
+				s.lastAliveMu.Unlock()
 
-				if time.Since(lastAlive) > 30*time.Second {
+				if time.Since(last) > 30*time.Second {
 					s.cancel()
 					return
 				}
@@ -145,7 +121,12 @@ func (s *NeighborSlot) StartHeartbeat() {
 	}()
 }
 
-// Close 优雅关闭
+func (s *NeighborSlot) touchAlive() {
+	s.lastAliveMu.Lock()
+	s.lastAlive = time.Now()
+	s.lastAliveMu.Unlock()
+}
+
 func (s *NeighborSlot) Close() error {
 	s.cancel()
 	return s.stream.CloseSend()

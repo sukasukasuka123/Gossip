@@ -1,29 +1,39 @@
+// ConnManager/gossip_chunk_server.go
 package ConnManager
 
 import (
 	"io"
+	"log"
 
+	"github.com/sukasukasuka123/Gossip/MessageManage"
 	pb "github.com/sukasukasuka123/Gossip/gossip_rpc_chunk/proto"
 )
 
 type GossipChunkServer struct {
-	NodeHash     string
-	NeighborHash string
+	pb.UnimplementedGossipChunkServiceServer
+
+	NodeHash       string
+	messageManager *MessageManage.MessageManager
+	handler        MessageManage.MessageHandler // 消息完成后的回调
 }
 
-// 这是proto对应的服务端代码，负责实现pushchunks rpc方法
+// NewGossipChunkServer 创建 gRPC 服务端
+func NewGossipChunkServer(
+	nodeHash string,
+	messageManager *MessageManage.MessageManager,
+	handler MessageManage.MessageHandler,
+) *GossipChunkServer {
+	return &GossipChunkServer{
+		NodeHash:       nodeHash,
+		messageManager: messageManager,
+		handler:        handler,
+	}
+}
+
+// PushChunks 实现 gRPC 流式接收
 func (s *GossipChunkServer) PushChunks(
 	stream pb.GossipChunkService_PushChunksServer,
 ) error {
-
-	// 内部状态结构：跟踪每条消息的接收进度
-	type MessageState struct {
-		totalChunks int32
-		received    map[int32]bool
-	}
-
-	messages := make(map[string]*MessageState)
-
 	for {
 		// 1. 接收 chunk
 		chunk, err := stream.Recv()
@@ -32,23 +42,16 @@ func (s *GossipChunkServer) PushChunks(
 			return nil
 		}
 		if err != nil {
+			log.Printf("[Server] 接收 chunk 错误: %v", err)
 			return err
 		}
 
-		key := chunk.PayloadHash
+		// 2. 处理 chunk（包含去重、重组逻辑）
+		complete, payload, isDuplicate := s.messageManager.HandleIncomingChunk(chunk)
 
-		// 2. 初始化消息状态
-		state, ok := messages[key]
-		if !ok {
-			state = &MessageState{
-				totalChunks: chunk.TotalChunks,
-				received:    make(map[int32]bool),
-			}
-			messages[key] = state
-		}
-
-		// 3. 去重判断
-		if state.received[chunk.ChunkIndex] {
+		// 3. 根据处理结果返回不同的 ACK
+		if isDuplicate {
+			// 消息已经完整接收过，返回重复 ACK
 			stream.Send(&pb.GossipChunkAck{
 				PayloadHash: chunk.PayloadHash,
 				RecvHash:    s.NodeHash,
@@ -59,29 +62,37 @@ func (s *GossipChunkServer) PushChunks(
 			continue
 		}
 
-		// 4. 记录接收
-		state.received[chunk.ChunkIndex] = true
-
-		// 5. 返回 ACK
-		stream.Send(&pb.GossipChunkAck{
-			PayloadHash: chunk.PayloadHash,
-			RecvHash:    "node2",
-			SessionID:   chunk.SessionID,
-			ChunkIndex:  chunk.ChunkIndex,
-			Status:      pb.AckStatus_ACK_OK,
-		})
-
-		// 6. 判断是否完成
-		if int32(len(state.received)) == state.totalChunks {
+		if !complete {
+			// Chunk 接收成功，但消息还未完成
 			stream.Send(&pb.GossipChunkAck{
 				PayloadHash: chunk.PayloadHash,
-				RecvHash:    "node2",
+				RecvHash:    s.NodeHash,
 				SessionID:   chunk.SessionID,
-				ChunkIndex:  -1,
+				ChunkIndex:  chunk.ChunkIndex,
+				Status:      pb.AckStatus_ACK_OK,
+			})
+		} else {
+			// 4. 消息接收完成
+			log.Printf("[Server] 消息接收完成: hash=%s, sender=%s, size=%d bytes",
+				chunk.PayloadHash, chunk.SenderHash, len(payload))
+
+			// 返回完成 ACK
+			stream.Send(&pb.GossipChunkAck{
+				PayloadHash: chunk.PayloadHash,
+				RecvHash:    s.NodeHash,
+				SessionID:   chunk.SessionID,
+				ChunkIndex:  chunk.ChunkIndex,
 				Status:      pb.AckStatus_ACK_COMPLETE,
 			})
 
-			delete(messages, key) // 清理状态
+			// 5. 异步触发消息完成回调（不阻塞接收流程）
+			if s.handler != nil {
+				go s.handler.OnMessageComplete(
+					chunk.PayloadHash,
+					payload,
+					chunk.SenderHash,
+				)
+			}
 		}
 	}
 }

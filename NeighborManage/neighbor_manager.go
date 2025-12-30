@@ -1,3 +1,4 @@
+// NeighborManage/neighbor_manager.go
 package NeighborManage
 
 import (
@@ -8,27 +9,30 @@ import (
 	"github.com/sukasukasuka123/Gossip/ConnManager"
 )
 
-// 这是邻居管理模块，负责维护邻居节点的信息和状态
-// 主要是负责fanout选出合适的邻居节点进行消息传播
-
 type NeighborNode struct {
-	NodeHash string        // 节点哈希
-	Address  string        // 节点地址
-	Port     int           // 节点端口
-	Ping     time.Duration // 最后一次ping的延迟（ Duration 类型，表示延迟）
+	NodeHash string
+	Address  string
+	Port     int
+	Ping     time.Duration
 }
+
 type NeighborManager struct {
 	mu            sync.RWMutex
-	neighbors     map[string]*NeighborNode             // 邻居节点哈希 -> 邻居节点信息
-	neighborsConn map[string]*ConnManager.NeighborSlot // 邻居节点哈希 -> 连接槽
-	neighborState map[string]time.Time                 // 邻居节点哈希 -> 最后一次活跃时间
+	neighbors     map[string]*NeighborNode
+	neighborsConn map[string]*ConnManager.NeighborSlot
+	neighborState map[string]time.Time
+
+	//  新增：fanout 管理器
+	fanoutManager *FanoutManager
 }
 
-func NewNeighborManager() *NeighborManager {
+// NewNeighborManager 创建邻居管理器
+func NewNeighborManager(fanoutStrategy FanoutStrategy, fanoutCount int) *NeighborManager {
 	return &NeighborManager{
 		neighbors:     make(map[string]*NeighborNode),
 		neighborsConn: make(map[string]*ConnManager.NeighborSlot),
 		neighborState: make(map[string]time.Time),
+		fanoutManager: NewFanoutManager(fanoutStrategy, fanoutCount, 10*time.Minute),
 	}
 }
 
@@ -68,7 +72,6 @@ func (nm *NeighborManager) GetAllNeighbors() []*NeighborNode {
 
 	nodes := make([]*NeighborNode, 0, len(nm.neighbors))
 	for _, node := range nm.neighbors {
-		// 创建副本以避免外部修改
 		nodeCopy := &NeighborNode{
 			NodeHash: node.NodeHash,
 			Address:  node.Address,
@@ -89,12 +92,11 @@ func (nm *NeighborManager) GetNeighborSlot(nodeHash string) (*ConnManager.Neighb
 	return slot, exists
 }
 
-// GetBestNeighbors 根据延迟排序获取最优的 N 个邻居
+// GetBestNeighbors 根据延迟排序获取最优的 N 个邻居（用于内部排序）
 func (nm *NeighborManager) GetBestNeighbors(count int) []*NeighborNode {
 	nm.mu.RLock()
 	defer nm.mu.RUnlock()
 
-	// 获取所有邻居
 	nodes := make([]*NeighborNode, 0, len(nm.neighbors))
 	for _, node := range nm.neighbors {
 		nodeCopy := &NeighborNode{
@@ -111,12 +113,90 @@ func (nm *NeighborManager) GetBestNeighbors(count int) []*NeighborNode {
 		return nodes[i].Ping < nodes[j].Ping
 	})
 
-	// 返回前 N 个
 	if count > len(nodes) {
 		count = len(nodes)
 	}
 
 	return nodes[:count]
+}
+
+// 新增：FanoutMessage 根据策略选择邻居并返回他们的连接槽
+func (nm *NeighborManager) FanoutMessage(messageHash string, excludeHash string) []*ConnManager.NeighborSlot {
+	// 1. 获取所有邻居并按延迟排序
+	allNeighbors := nm.GetBestNeighbors(len(nm.neighbors))
+
+	// 2. 使用 FanoutManager 选择邻居
+	selectedNeighbors := nm.fanoutManager.SelectNeighborsForFanout(
+		messageHash,
+		allNeighbors,
+		excludeHash,
+	)
+
+	// 3. 获取对应的连接槽
+	slots := make([]*ConnManager.NeighborSlot, 0, len(selectedNeighbors))
+	nm.mu.RLock()
+	for _, neighbor := range selectedNeighbors {
+		if slot, exists := nm.neighborsConn[neighbor.NodeHash]; exists {
+			slots = append(slots, slot)
+		}
+	}
+	nm.mu.RUnlock()
+
+	return slots
+}
+
+// 新增：FanoutMessageWithCallback 带回调的 fanout，可以在发送成功后标记状态
+func (nm *NeighborManager) FanoutMessageWithCallback(
+	messageHash string,
+	excludeHash string,
+	sendFunc func(slot *ConnManager.NeighborSlot, neighborHash string) error,
+) error {
+	// 1. 获取所有邻居并按延迟排序
+	allNeighbors := nm.GetBestNeighbors(len(nm.neighbors))
+
+	// 2. 使用 FanoutManager 选择邻居
+	selectedNeighbors := nm.fanoutManager.SelectNeighborsForFanout(
+		messageHash,
+		allNeighbors,
+		excludeHash,
+	)
+
+	// 3. 发送给每个选中的邻居
+	for _, neighbor := range selectedNeighbors {
+		slot, exists := nm.GetNeighborSlot(neighbor.NodeHash)
+		if !exists {
+			continue
+		}
+
+		// 执行发送回调
+		if err := sendFunc(slot, neighbor.NodeHash); err != nil {
+			// 发送失败，可以记录日志
+			continue
+		}
+
+		// 发送成功，标记状态
+		nm.fanoutManager.MarkMessageSent(messageHash, neighbor.NodeHash)
+	}
+
+	// 标记消息 fanout 完成
+	nm.fanoutManager.MarkMessageComplete(messageHash)
+
+	return nil
+}
+
+// 新增：GetMessageFanoutState 获取消息的 fanout 状态
+func (nm *NeighborManager) GetMessageFanoutState(messageHash string) (*MessageFanoutState, bool) {
+	return nm.fanoutManager.GetMessageState(messageHash)
+}
+
+// 新增：HasSentToNeighbor 检查消息是否已发送给某个邻居
+func (nm *NeighborManager) HasSentToNeighbor(messageHash, neighborHash string) bool {
+	return nm.fanoutManager.HasSentToNeighbor(messageHash, neighborHash)
+}
+
+// 新增：GetFanoutStats 获取 fanout 统计信息
+func (nm *NeighborManager) GetFanoutStats() map[string]interface{} {
+	return nm.fanoutManager.GetStats()
 }
 
 // UpdatePing 更新邻居的 Ping 延迟
@@ -228,7 +308,6 @@ func (nm *NeighborManager) GetNeighborInfo(nodeHash string) (node *NeighborNode,
 		return nil, time.Time{}, false
 	}
 
-	// 返回副本
 	nodeCopy := &NeighborNode{
 		NodeHash: n.NodeHash,
 		Address:  n.Address,
