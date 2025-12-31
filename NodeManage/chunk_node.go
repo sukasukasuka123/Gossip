@@ -74,7 +74,7 @@ func DefaultNodeConfig() *NodeConfig {
 		Address:         "0.0.0.0",
 		Port:            50051,
 		ChunkSize:       64 * 1024, // 64KB
-		FanoutCount:     3,
+		FanoutCount:     5,
 		FanoutStrategy:  NeighborManage.FanoutByLatency,
 		WindowSize:      15,
 		DeduplicatorTTL: 10 * time.Minute,

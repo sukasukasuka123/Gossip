@@ -13,4 +13,4 @@ proto:
 		--go-grpc_out=$(OUT_DIR) \
 		--go-grpc_opt=paths=source_relative \
 		$(PROTO_FILES)
-// 用gitbash自带的mingw32的makefile
+# 用gitbash自带的mingw32的makefile
