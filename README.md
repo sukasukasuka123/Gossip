@@ -297,7 +297,7 @@ func main() {
 | `Address` | string | "0.0.0.0" | 监听地址 |
 | `Port` | int | 50051 | 监听端口 |
 | `ChunkSize` | int | 65536 (64KB) | 消息分块大小 |
-| `FanoutCount` | int | 3 | 每次转发的邻居数量 |
+| `FanoutCount` | int | 5 | 每次转发的邻居数量 |
 | `FanoutStrategy` | FanoutStrategy | FanoutByLatency | Fanout 选择策略 |
 | `WindowSize` | int | 15 | 滑动窗口大小 |
 | `DeduplicatorTTL` | Duration | 10 分钟 | 去重记录保留时长 |
@@ -317,6 +317,21 @@ func main() {
 - CPU: 8 核心
 - Go Version: 1.20+
 - OS: Linux/macOS
+
+### 单元测试
+| 测试名称                      | 测试目标         |  执行时间 |   结果 | 评价要点             |
+| ------------------------- | ------------ | ----: | ---: | ---------------- |
+| TestNodeCreationAndStart  | 单节点创建与启动     | 0.14s | PASS | 节点生命周期完整，无阻塞、无泄漏 |
+| TestMultipleNodesCreation | 多节点并发创建      | 0.25s | PASS | 配置隔离正确，无端口/资源冲突  |
+| TestNodeConnection        | 节点间连接建立      | 0.24s | PASS | 连接流程稳定，可复用       |
+| TestConnectionFailure     | 异常连接处理       | 0.15s | PASS | 失败路径显式处理，健壮性良好   |
+| TestMessageBroadcast      | 基础消息广播       | 0.56s | PASS | Gossip 主路径正确     |
+| TestSmallMessageBroadcast | 小消息广播        | 0.57s | PASS | 低负载下传播可靠         |
+| TestLargeMessageBroadcast | 大消息广播（Chunk） | 0.79s | PASS | Chunk / 组装逻辑稳定   |
+| TestMultipleBroadcasts    | 高频多次广播       | 1.06s | PASS | 无丢包、无状态污染        |
+| TestNodeStats             | 节点统计信息       | 0.16s | PASS | 可观测性设计到位         |
+| TestMultiNodeStarTopology | 多节点星型拓扑      | 0.28s | PASS | 拓扑传播行为符合预期       |
+
 
 ### 基准测试结果
 
