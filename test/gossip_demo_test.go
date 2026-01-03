@@ -222,3 +222,92 @@ func BenchmarkMultiNodeBroadcast(b *testing.B) {
 		nodes[0].BroadcastMessage(payload)
 	}
 }
+func BenchmarkChunkGossip_Stress(b *testing.B) {
+	// ===============================
+	// 基准测试-压测参数（可以按需调）
+	// ===============================
+	nodeCount := 14             // 节点数量
+	parallelism := 4            // 并发广播 goroutine 倍数
+	messageRepeat := 1024 * 128 // 单条消息大小倍率
+	basePort := 13000
+
+	b.SetParallelism(parallelism)
+
+	// ===============================
+	// 创建并启动节点
+	// ===============================
+	nodes := make([]*NodeManage.ChunkNode, nodeCount)
+
+	for i := 0; i < nodeCount; i++ {
+		cfg := NodeManage.DefaultNodeConfig()
+		cfg.Port = basePort + i
+		nodes[i] = NodeManage.NewChunkNode(cfg)
+		_ = nodes[i].Start()
+	}
+
+	for i := nodeCount - 1; i >= 0; i-- {
+		defer nodes[i].Stop()
+	}
+
+	// ===============================
+	// 构建拓扑：半 Mesh（比星型更残酷）
+	// Node0 连接所有
+	// 其他节点互连一部分
+	// ===============================
+	for i := 1; i < nodeCount; i++ {
+		_ = nodes[0].ConnectToNeighbor("127.0.0.1", basePort+i)
+	}
+
+	for i := 1; i < nodeCount; i++ {
+		for j := i + 1; j < nodeCount; j++ {
+			if (i+j)%2 == 0 { // 控制连接密度
+				_ = nodes[i].ConnectToNeighbor("127.0.0.1", basePort+j)
+			}
+		}
+	}
+
+	// 等待网络稳定
+	time.Sleep(500 * time.Millisecond)
+
+	// ===============================
+	// 构造“偏真实但恶意”的消息
+	// ===============================
+	payload := bytes.Repeat(
+		[]byte("STRESS_GOSSIP_PAYLOAD_"),
+		messageRepeat, //
+	)
+
+	// ===============================
+	// 开始压测
+	// ===============================
+	b.ResetTimer()
+	b.ReportAllocs()
+
+	b.RunParallel(func(pb *testing.PB) {
+		for pb.Next() {
+			// 固定由 node0 发起，最大化 fan-out 压力
+			nodes[0].BroadcastMessage(payload)
+		}
+	})
+
+	b.StopTimer()
+
+	// ===============================
+	// 统计结果（不计入性能）
+	// ===============================
+	totalReceived := int64(0)
+	for i := 1; i < nodeCount; i++ {
+		stats := nodes[i].GetStats()
+		if v, ok := stats["messages_received"].(int64); ok {
+			totalReceived += v
+		}
+	}
+
+	b.Logf(
+		"[Stress Result] Nodes=%d Parallel=%d Payload≈%dB TotalReceived=%d",
+		nodeCount,
+		parallelism,
+		len(payload),
+		totalReceived,
+	)
+}

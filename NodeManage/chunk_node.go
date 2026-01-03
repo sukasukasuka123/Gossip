@@ -76,7 +76,7 @@ func DefaultNodeConfig() *NodeConfig {
 		ChunkSize:       64 * 1024, // 64KB
 		FanoutCount:     5,
 		FanoutStrategy:  NeighborManage.FanoutByLatency,
-		WindowSize:      15,
+		WindowSize:      128,
 		DeduplicatorTTL: 10 * time.Minute,
 		CleanupInterval: time.Minute,
 		StaleDuration:   5 * time.Minute,

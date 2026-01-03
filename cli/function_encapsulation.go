@@ -61,6 +61,8 @@ func (c *CLI) executeCommand(command string, args []string) error {
 	switch command {
 	case "help", "h":
 		c.printHelp()
+	case "start":
+		return c.startNode()
 	case "stop":
 		return c.stopNode()
 	case "connect", "conn":
@@ -89,6 +91,7 @@ func (c *CLI) printHelp() {
 	help := `
 可用命令:
   help, h                          - 显示此帮助信息
+  start                            - 启动节点
   stop                             - 停止节点
   connect <address> <port>         - 连接到邻居节点
   disconnect <node_hash>           - 断开邻居连接

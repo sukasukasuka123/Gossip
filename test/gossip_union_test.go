@@ -2,6 +2,7 @@ package test
 
 import (
 	"bytes"
+	"sync"
 	"testing"
 	"time"
 
@@ -450,4 +451,100 @@ func waitUntil(t *testing.T, timeout time.Duration, cond func() bool) {
 		time.Sleep(10 * time.Millisecond)
 	}
 	t.Fatal("condition not met before timeout")
+}
+func TestChunkGossipStressStability(t *testing.T) {
+	// ===============================
+	// 参数配置（偏向压力，但仍是 unit test）
+	// ===============================
+	nodeCount := 14
+	basePort := 14000
+	messageRepeat := 1024 * 128
+	broadcastRounds := 50
+
+	// ===============================
+	// 创建并启动节点
+	// ===============================
+	nodes := make([]*NodeManage.ChunkNode, nodeCount)
+
+	for i := 0; i < nodeCount; i++ {
+		cfg := NodeManage.DefaultNodeConfig()
+		cfg.Port = basePort + i
+		nodes[i] = NodeManage.NewChunkNode(cfg)
+		if err := nodes[i].Start(); err != nil {
+			t.Fatalf("failed to start node %d: %v", i, err)
+		}
+	}
+
+	for i := nodeCount - 1; i >= 0; i-- {
+		defer nodes[i].Stop()
+	}
+
+	// ===============================
+	// 构建半 Mesh 拓扑
+	// ===============================
+	for i := 1; i < nodeCount; i++ {
+		_ = nodes[0].ConnectToNeighbor("127.0.0.1", basePort+i)
+	}
+
+	for i := 1; i < nodeCount; i++ {
+		for j := i + 1; j < nodeCount; j++ {
+			if (i+j)%2 == 0 {
+				_ = nodes[i].ConnectToNeighbor("127.0.0.1", basePort+j)
+			}
+		}
+	}
+
+	time.Sleep(500 * time.Millisecond)
+
+	// ===============================
+	// 构造压力消息
+	// ===============================
+	payload := bytes.Repeat(
+		[]byte("UNIT_TEST_STRESS_PAYLOAD_"),
+		messageRepeat,
+	)
+
+	// ===============================
+	// 并发广播（但数量受控）
+	// ===============================
+	var wg sync.WaitGroup
+	concurrency := 4
+	wg.Add(concurrency)
+
+	for i := 0; i < concurrency; i++ {
+		go func() {
+			defer wg.Done()
+			for j := 0; j < broadcastRounds; j++ {
+				nodes[0].BroadcastMessage(payload)
+			}
+		}()
+	}
+
+	wg.Wait()
+
+	// 给 Gossip 一点时间完成传播
+	time.Sleep(800 * time.Millisecond)
+
+	// ===============================
+	// 验证：系统是否“合理收敛”
+	// ===============================
+	for i := 1; i < nodeCount; i++ {
+		stats := nodes[i].GetStats()
+
+		received, ok := stats["messages_received"].(int64)
+		if !ok {
+			t.Fatalf("node %d has no messages_received stat", i)
+		}
+
+		// 不是精确断言，而是下限断言
+		if received == 0 {
+			t.Fatalf("node %d received 0 messages under stress", i)
+		}
+
+		t.Logf(
+			"node %d received %d messages under stress",
+			i,
+			received,
+		)
+	}
 }
