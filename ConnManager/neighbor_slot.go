@@ -3,6 +3,7 @@ package ConnManager
 import (
 	"context"
 	"fmt"
+	"log"
 	"sync"
 	"time"
 
@@ -49,9 +50,11 @@ func (s *NeighborSlot) runSlidingWindow() {
 	s.window.ResourceManageBatch(s.ctx, func(batch map[string]*pb.GossipChunk) {
 		for key, chunk := range batch {
 			if err := s.stream.Send(chunk); err != nil {
-				s.cancel()
-				return
+				log.Printf("[NeighborSlot %s] Send chunk error: %v\n", s.neighborID, err)
+				continue
 			}
+			log.Printf("[NeighborSlot %s] Sent chunk: PayloadHash=%s, ChunkIndex=%d\n",
+				s.neighborID, chunk.PayloadHash, chunk.ChunkIndex)
 			s.inFlight.Store(key, struct{}{})
 			s.touchAlive()
 		}
